@@ -322,10 +322,10 @@ void	console_cursor (int state);
 #endif
 
 
-#if defined(DEBUG) || defined(DEBUG_CFB_CONSOLE)
-#define PRINTD(x)	  printf(x)
+#ifdef INIT_TIME 
+#define PRINTD(...)	  
 #else
-#define PRINTD(x)
+#define PRINTD(...)	printf(__VA_ARGS__)
 #endif
 
 
@@ -1070,16 +1070,16 @@ int video_display_bitmap (ulong bmp_image, int x, int y)
 		len = CFG_VIDEO_LOGO_MAX_SIZE;
 		dst = malloc(CFG_VIDEO_LOGO_MAX_SIZE);
 		if (dst == NULL) {
-			printf("Error: malloc in gunzip failed!\n");
+			PRINTD("Error: malloc in gunzip failed!\n");
 			return(1);
 		}
 		if (gunzip(dst, CFG_VIDEO_LOGO_MAX_SIZE, (unsigned char *)bmp_image, &len) != 0) {
-			printf ("Error: no valid bmp or bmp.gz image at %lx\n", bmp_image);
+			PRINTD ("Error: no valid bmp or bmp.gz image at %lx\n", bmp_image);
 			free(dst);
 			return 1;
 		}
 		if (len == CFG_VIDEO_LOGO_MAX_SIZE) {
-			printf("Image could be truncated (increase CFG_VIDEO_LOGO_MAX_SIZE)!\n");
+			PRINTD("Image could be truncated (increase CFG_VIDEO_LOGO_MAX_SIZE)!\n");
 		}
 
 		/*
@@ -1089,11 +1089,11 @@ int video_display_bitmap (ulong bmp_image, int x, int y)
 
 		if (!((bmp->header.signature[0] == 'B') &&
 		      (bmp->header.signature[1] == 'M'))) {
-			printf ("Error: no valid bmp.gz image at %lx\n", bmp_image);
+			PRINTD ("Error: no valid bmp.gz image at %lx\n", bmp_image);
 			return 1;
 		}
 #else
-		printf ("Error: no valid bmp image at %lx\n", bmp_image);
+		PRINTD ("Error: no valid bmp image at %lx\n", bmp_image);
 		return 1;
 #endif /* CONFIG_VIDEO_BMP_GZIP */
 	}
@@ -1108,7 +1108,7 @@ int video_display_bitmap (ulong bmp_image, int x, int y)
 	       width, height, colors);
 
 	if (compression != BMP_BI_RGB) {
-		printf ("Error: compression type %ld not supported\n",
+		PRINTD ("Error: compression type %ld not supported\n",
 			compression);
 		return 1;
 	}
@@ -1278,12 +1278,12 @@ int video_display_bitmap (ulong bmp_image, int x, int y)
 			}
 			break;
 		default:
-			printf ("Error: 24 bits/pixel bitmap incompatible with current video mode\n");
+			PRINTD ("Error: 24 bits/pixel bitmap incompatible with current video mode\n");
 			break;
 		}
 		break;
 	default:
-		printf ("Error: %d bit/pixel bitmaps not supported by U-Boot\n",
+		PRINTD ("Error: %d bit/pixel bitmaps not supported by U-Boot\n",
 			le16_to_cpu (bmp->header.bit_count));
 		break;
 	}
@@ -1478,7 +1478,7 @@ char console_buffer[2][49][172]={32};//128*48->1024x768
 #elif defined(X320x240)
 char console_buffer[2][16][41]={32};//40*15->320x240
 #elif defined(FB_XSIZE) && defined(FB_YSIZE)
-char console_buffer[2][FB_YSIZE/8+1][FB_XSIZE/16+1]={32};
+char console_buffer[2][FB_YSIZE/16+1][FB_XSIZE/8+1]={32};
 #else
 char console_buffer[2][31][81]={32};//80*30->640x480
 #endif
@@ -1699,7 +1699,7 @@ int fb_init (unsigned long fbbase,unsigned long iobase)
 	pGD->frameAdrs = fbbase;
 #endif
 
-	printf("cfb_console init,fb=%x\n",pGD->frameAdrs);
+	PRINTD("cfb_console init,fb=%x\n",pGD->frameAdrs);
 
 	video_fb_address = (void *) VIDEO_FB_ADRS;
 #ifdef CONFIG_VIDEO_HW_CURSOR
@@ -1772,12 +1772,12 @@ int fb_init (unsigned long fbbase,unsigned long iobase)
 	memsetl (video_fb_address, VIDEO_COLS * VIDEO_ROWS * VIDEO_PIXEL_SIZE / 4, CONSOLE_BG_COL);
 #ifdef CONFIG_VIDEO_LOGO
 	/* Plot the logo and get start point of console */
-	printf("Video: Drawing the logo ...\n");
+	PRINTD("Video: Drawing the logo ...\n");
 	video_console_address = video_logo ();
 #else
 	video_console_address = video_fb_address;
 #endif
-	printf("CONSOLE_SIZE %d\n", CONSOLE_SIZE);
+	PRINTD("CONSOLE_SIZE %d\n", CONSOLE_SIZE);
 
 	/* Initialize the console */
 	console_col = 0;

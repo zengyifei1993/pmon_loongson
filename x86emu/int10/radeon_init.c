@@ -1015,12 +1015,6 @@ const struct video_card_mode{
 //bits per pixel
 #define COLOR_DEPTH	16
 
-int GetBytesPP(void)
-{
-	return COLOR_DEPTH/8;
-}
-
-
 #define DST_1BPP                0
 #define DST_4BPP                1
 #define DST_8BPP                2
@@ -1406,16 +1400,6 @@ void SetVideoMode(void)
 	}
 	return;
 #endif
-}
-
-int GetXRes(void)
-{
-	return XRES;
-}
-
-int GetYRes(void)
-{
-	return YRES;
 }
 
 #ifndef VGA_NOTEBOOK
@@ -2010,14 +1994,4 @@ void video_hw_bitblt(int bpp, int sx, int sy, int dx, int dy, int w, int h)
 	radeon_engine_idle();
 }
 
-void video_set_lut(int index, int r, int g, int b)
-{
-	OUTL(0xb0, index);
-	OUTL(0xb4, (r << 16) | (g << 8) | b);
-}
-void video_set_lut2(int index, int rgb)
-{
-	OUTL(0xb0, index);
-	OUTL(0xb4, rgb);
-}
 #endif				/* RADEON 7000 */

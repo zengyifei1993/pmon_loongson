@@ -36,6 +36,14 @@ unsigned int mem_size = 0;
 
 #include "../../../pmon/common/smbios/smbios.h"
 
+#ifdef INIT_TIME
+#define PRINTD(...)	  
+#define TPRINTD(...)	  
+#else
+#define PRINTD(...)		printf(__VA_ARGS__)
+#define TPRINTD(...)            tgt_printf(__VA_ARGS__)
+#endif
+
 void tgt_putchar(int);
 int tgt_printf(const char *fmt, ...)
 {
@@ -183,6 +191,7 @@ extern unsigned long long memorysize_high;
 extern char MipsException[], MipsExceptionEnd[];
 
 unsigned char hwethadr[6];
+unsigned char hwethadr1[6];
 
 void initmips(unsigned long long  raw_memsz);
 
@@ -240,7 +249,7 @@ void initmips(unsigned long long  raw_memsz)
 	bcopy(MipsException, (char *)GEN_EXC_VEC,
 			MipsExceptionEnd - MipsException);
 	SBD_DISPLAY("BEV0", 0);
-	printf("BEV in SR set to zero.\n");
+	PRINTD("BEV in SR set to zero.\n");
 	ls2k_nand_init();
 #ifdef DTB
 	verify_dtb();
@@ -257,7 +266,7 @@ void initmips(unsigned long long  raw_memsz)
 /*
  *  Put all machine dependent initialization here. This call
  *  is done after console has been initialized so it's safe
- *  to output configuration and debug information with printf.
+ *  to output configuration and debug information with PRINTD.
  */
 extern void vt82c686_init(void);
 int psaux_init(void);
@@ -270,8 +279,7 @@ extern unsigned short ScreenLineLength;
 extern unsigned short ScreenDepth;
 extern unsigned short ScreenHeight;
 
-
-static void init_pcidev(void)
+static void init_pcidev(unsigned int str_sum)
 {
 	unsigned int val;
 #if NMOD_VGACON > 0
@@ -284,8 +292,8 @@ static void init_pcidev(void)
 	*(volatile unsigned int *)0xbfe10428 &= ~(1<<19); /*disable usb prefetch*/
 	val = *(unsigned int *)0xbfe10420;
 	*(unsigned int *)0xbfe10420 = (val | 0xc000);//mtf, enable I2C1
-
 	_pci_devinit(1);	/* PCI device initialization */
+	if(str_sum > 0){
 #if (NMOD_X86EMU_INT10 > 0)||(NMOD_X86EMU >0)
 	if(pcie_dev != NULL){
 		SBD_DISPLAY("VGAI", 0);
@@ -295,9 +303,9 @@ static void init_pcidev(void)
 #if NMOD_FRAMEBUFFER > 0
 	if (rc > 0) {
 		if(pcie_dev == NULL){
-			printf("begin fb_init\n");
+			PRINTD("begin fb_init\n");
 			fbaddress = dc_init();
-			printf("dc_init done\n");
+			PRINTD("dc_init done\n");
 			//this parameters for 1280*1024 VGA
 			ScreenLineLength = 2560;
 			ScreenDepth = 15;
@@ -307,11 +315,11 @@ static void init_pcidev(void)
 			fbaddress = fbaddress &0xffffff00; //laster 8 bit
 			fbaddress |= 0x80000000;
 		}
-		printf("fbaddress = %08x\n", fbaddress);
+		PRINTD("fbaddress = %08x\n", fbaddress);
 		fb_init(fbaddress, 0);
-		printf("fb_init done\n");
+		PRINTD("fb_init done\n");
 	} else {
-		printf("vga bios init failed, rc=%d\n",rc);
+		PRINTD("vga bios init failed, rc=%d\n",rc);
 	}
 #endif
 
@@ -322,7 +330,7 @@ static void init_pcidev(void)
 		else
 			vga_available = 0;
 #endif
-
+	}
 	return;
 }
 
@@ -330,7 +338,7 @@ void tgt_devconfig()
 {
 
 	/* Enable pci device and init VGA device */
-	init_pcidev();
+	init_pcidev(1);
 
 	config_init();
 	configure();
@@ -341,7 +349,7 @@ void tgt_devconfig()
 		rc = 1;
 	else
 		rc = kbd_initialize();
-	printf("%s\n", kbd_error_msgs[rc]);
+	PRINTD("%s\n", kbd_error_msgs[rc]);
 	if (!rc) {
 		kbd_available = 1;
 	}
@@ -350,7 +358,7 @@ void tgt_devconfig()
 #ifdef SLT
 	slt_test();
 #endif
-	printf("devconfig done.\n");
+	PRINTD("devconfig done.\n");
 
 }
 
@@ -389,7 +397,7 @@ void check_str()
 
 	if ((s3_sp < 0x9800000000000000) || (s3_ra < 0xffffffff80000000)
 			|| (s3_flag != 0x5a5a5a5a5a5a5a5a)) {
-		printf("S3 status no exit %llx\n", s3_flag);
+		PRINTD("S3 status no exit %llx\n", s3_flag);
 		return;
 	}
 	/* clean s3 wake flag */
@@ -585,42 +593,42 @@ void tgt_cmd_vers()
 void tgt_logo()
 {
 #if 0
-	printf("\n");
-	printf
+	PRINTD("\n");
+	PRINTD
 	    ("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\n");
-	printf
+	PRINTD
 	    ("[[[            [[[[   [[[[[[[[[[   [[[[            [[[[   [[[[[[[  [[\n");
-	printf
+	PRINTD
 	    ("[[   [[[[[[[[   [[[    [[[[[[[[    [[[   [[[[[[[[   [[[    [[[[[[  [[\n");
-	printf
+	PRINTD
 	    ("[[  [[[[[[[[[[  [[[  [  [[[[[[  [  [[[  [[[[[[[[[[  [[[  [  [[[[[  [[\n");
-	printf
+	PRINTD
 	    ("[[  [[[[[[[[[[  [[[  [[  [[[[  [[  [[[  [[[[[[[[[[  [[[  [[  [[[[  [[\n");
-	printf
+	PRINTD
 	    ("[[   [[[[[[[[   [[[  [[[  [[  [[[  [[[  [[[[[[[[[[  [[[  [[[  [[[  [[\n");
-	printf
+	PRINTD
 	    ("[[             [[[[  [[[[    [[[[  [[[  [[[[[[[[[[  [[[  [[[[  [[  [[\n");
-	printf
+	PRINTD
 	    ("[[  [[[[[[[[[[[[[[[  [[[[[  [[[[[  [[[  [[[[[[[[[[  [[[  [[[[[  [  [[\n");
-	printf
+	PRINTD
 	    ("[[  [[[[[[[[[[[[[[[  [[[[[[[[[[[[  [[[  [[[[[[[[[[  [[[  [[[[[[    [[\n");
-	printf
+	PRINTD
 	    ("[[  [[[[[[[[[[[[[[[  [[[[[[[[[[[[  [[[   [[[[[[[[   [[[  [[[[[[[   [[\n");
-	printf
+	PRINTD
 	    ("[[  [[[[[[[[[[[[[[[  [[[[[[[[[[[[  [[[[            [[[[  [[[[[[[[  [[\n");
-	printf
+	PRINTD
 	    ("[[[[[[[2005][[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\n");
 #endif
-	printf("\n");
-	printf("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\n");
-	printf("[[  [[[[[[[[[       [[[[[       [[[[   [[[[[  [[[[[      [[[[[       [[[[[       [[[[   [[[[[  [[\n");
-	printf("[[  [[[[[[[[   [[[[  [[[   [[[[  [[[    [[[[  [[[[  [[[[  [[[   [[[[  [[[   [[[[  [[[    [[[[  [[\n");
-	printf("[[  [[[[[[[[  [[[[[[ [[[  [[[[[[ [[[  [  [[[  [[[  [[[[[[[[[[[[   [[[[[[[  [[[[[[ [[[  [  [[[  [[\n");
-	printf("[[  [[[[[[[[  [[[[[[ [[[  [[[[[[ [[[  [[  [[  [[[  [[[    [[[[[[[    [[[[  [[[[[[ [[[  [[  [[  [[\n");
-	printf("[[  [[[[[[[[  [[[[[[ [[[  [[[[[[ [[[  [[[  [  [[[  [[[[[  [[[[[[[[[[  [[[  [[[[[[ [[[  [[[  [  [[\n");
-	printf("[[  [[[[[[[[   [[[[  [[[   [[[[  [[[  [[[[    [[[   [[[[  [[[   [[[  [[[[   [[[[  [[[  [[[[    [[\n");
-	printf("[[       [[[[       [[[[[       [[[[  [[[[[   [[[[       [[[[[      [[[[[[       [[[[  [[[[[   [[\n");
-	printf("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[2011 Loongson][[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\n");   
+	PRINTD("\n");
+	PRINTD("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\n");
+	PRINTD("[[  [[[[[[[[[       [[[[[       [[[[   [[[[[  [[[[[      [[[[[       [[[[[       [[[[   [[[[[  [[\n");
+	PRINTD("[[  [[[[[[[[   [[[[  [[[   [[[[  [[[    [[[[  [[[[  [[[[  [[[   [[[[  [[[   [[[[  [[[    [[[[  [[\n");
+	PRINTD("[[  [[[[[[[[  [[[[[[ [[[  [[[[[[ [[[  [  [[[  [[[  [[[[[[[[[[[[   [[[[[[[  [[[[[[ [[[  [  [[[  [[\n");
+	PRINTD("[[  [[[[[[[[  [[[[[[ [[[  [[[[[[ [[[  [[  [[  [[[  [[[    [[[[[[[    [[[[  [[[[[[ [[[  [[  [[  [[\n");
+	PRINTD("[[  [[[[[[[[  [[[[[[ [[[  [[[[[[ [[[  [[[  [  [[[  [[[[[  [[[[[[[[[[  [[[  [[[[[[ [[[  [[[  [  [[\n");
+	PRINTD("[[  [[[[[[[[   [[[[  [[[   [[[[  [[[  [[[[    [[[   [[[[  [[[   [[[  [[[[   [[[[  [[[  [[[[    [[\n");
+	PRINTD("[[       [[[[       [[[[[       [[[[  [[[[[   [[[[       [[[[[      [[[[[[       [[[[  [[[[[   [[\n");
+	PRINTD("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[2011 Loongson][[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\n");   
 }
 
 static void init_legacy_rtc(void)
@@ -646,7 +654,7 @@ static void init_legacy_rtc(void)
 		|| (hour > 23) || (min > 59)
 		|| (sec > 59)) {
 
-		tgt_printf("RTC time invalid, reset to epoch.\n");
+		TPRINTD("RTC time invalid, reset to epoch.\n");
 		/* 2000-01-01 00:00:00 */
 		val = (1 << 26) | (1 << 21);
 		outl(LS2H_TOY_WRITE1_REG, 0x64);
@@ -708,7 +716,7 @@ static void _probe_frequencies()
 
 		cnt = CPU_GetCOUNT() - cnt;
 		if (timeout == 0) {
-			tgt_printf("time out!\n");
+			TPRINTD("time out!\n");
 			break;	/* Get out if clock is not running */
 		}
 	}
@@ -729,7 +737,7 @@ static void _probe_frequencies()
 		md_cpufreq = 66000000;
 	}
 		cur = (inl(LS2K_HPET_PERIOD) / 1000000);
-	tgt_printf("cpu freq %u, cnt %u\n", md_pipefreq, cnt);
+	TPRINTD("cpu freq %u, cnt %u\n", md_pipefreq, cnt);
 
 	outl(LS2K_HPET_CONF, 0x0);//Disable main clock
 #else
@@ -749,7 +757,7 @@ static void _probe_frequencies()
 		} while (timeout != 0 && (cur == sec));
 		cnt = CPU_GetCOUNT() - cnt;
 		if (timeout == 0) {
-			tgt_printf("time out!\n");
+			TPRINTD("time out!\n");
 			break;	/* Get out if clock is not running */
 		}
 	}
@@ -774,7 +782,7 @@ static void _probe_frequencies()
 		} while (timeout != 0 && (cur == sec));
 		cnt = CPU_GetCOUNT() - cnt;
 		if (timeout == 0) {
-			tgt_printf("time out!\n");
+			TPRINTD("time out!\n");
 			break;	/* Get out if clock is not running */
 		}
 	}
@@ -791,7 +799,7 @@ static void _probe_frequencies()
 		 */
 		md_cpufreq = 66000000;
 	}
-	tgt_printf("cpu freq %u\n", md_pipefreq);
+	TPRINTD("cpu freq %u\n", md_pipefreq);
 #endif
 #endif /* HAVE_TOD */
 }
@@ -983,27 +991,27 @@ void tgt_settime(time_t t)
  */
 void tgt_memprint()
 {
-	printf("Primary Instruction cache size %dkb (%d line, %d way)\n",
+	PRINTD("Primary Instruction cache size %dkb (%d line, %d way)\n",
 	       CpuPrimaryInstCacheSize / 1024, CpuPrimaryInstCacheLSize,
 	       CpuNWayCache);
-	printf("Primary Data cache size %dkb (%d line, %d way)\n",
+	PRINTD("Primary Data cache size %dkb (%d line, %d way)\n",
 	       CpuPrimaryDataCacheSize / 1024, CpuPrimaryDataCacheLSize,
 	       CpuNWayCache);
 	if (CpuSecondaryCacheSize != 0) {
-		printf("Secondary cache size %dkb\n",
+		PRINTD("Secondary cache size %dkb\n",
 		       CpuSecondaryCacheSize / 1024);
 	}
 	if (CpuTertiaryCacheSize != 0) {
-		printf("Tertiary cache size %dkb\n",
+		PRINTD("Tertiary cache size %dkb\n",
 		       CpuTertiaryCacheSize / 1024);
 	}
 }
 
 void tgt_machprint()
 {
-	printf("Copyright 2000-2002, Opsycon AB, Sweden.\n");
-	printf("Copyright 2005, ICT CAS.\n");
-	printf("CPU %s @", md_cpuname());
+	PRINTD("Copyright 2000-2002, Opsycon AB, Sweden.\n");
+	PRINTD("Copyright 2005, ICT CAS.\n");
+	PRINTD("CPU %s @", md_cpuname());
 }
 
 /*
@@ -1058,7 +1066,7 @@ void tgt_flashinfo(void *p, size_t * t)
 
 void tgt_update_pmon_to_nand(unsigned char *src_addr, int size)
 {
-	printf("update pmom in normal mode\n");
+	PRINTD("update pmom in normal mode\n");
 	if ((size % 16) != 0) {
 		size = (size & 0xfffffff0) + 0x10;	//16 byte allign              
 	}
@@ -1067,7 +1075,7 @@ void tgt_update_pmon_to_nand(unsigned char *src_addr, int size)
 
 void tgt_update_pmon_to_nand_ecc(unsigned char *src_addr, int size)
 {
-	printf("update pmom in ecc mode\n");
+	PRINTD("update pmom in ecc mode\n");
 	if ((size % 1880) != 0) {
 		size = size - (size % 1880) + 1880;
 	}
@@ -1083,7 +1091,7 @@ void nandwrite_set_badblock(unsigned char *src_addr, unsigned int nand_addr,
 
 void tgt_flashprogram(void *p, int size, void *s, int endian)
 {
-	printf("Programming flash %x:%x into %x\n", s, size, p);
+	PRINTD("Programming flash %x:%x into %x\n", s, size, p);
 
 	if (p != 0xbfc00000) {
 		memcpy(p, s, size);
@@ -1098,13 +1106,13 @@ void tgt_flashprogram(void *p, int size, void *s, int endian)
 #else
 void tgt_flashprogram(void *p, int size, void *s, int endian)
 {
-	printf("Programming flash %x:%x into %x\n", s, size, p);
+	PRINTD("Programming flash %x:%x into %x\n", s, size, p);
 	if (fl_erase_device(p, size, TRUE)) {
-		printf("Erase failed!\n");
+		PRINTD("Erase failed!\n");
 		return;
 	}
 	if (fl_program_device(p, s, size, TRUE)) {
-		printf("Programming failed!\n");
+		PRINTD("Programming failed!\n");
 	}
 	fl_verify_device(p, s, size, TRUE);
 }
@@ -1125,6 +1133,11 @@ int tgt_ethaddr(char *p)
 	return (0);
 }
 
+int tgt_ethaddr1(char *p)
+{
+	bcopy((void *)&hwethadr1, p, 6);
+	return (0);
+}
 void tgt_netreset()
 {
 }
@@ -1154,10 +1167,10 @@ void tgt_mapenv(int (*func) __P((char *, char *)))
 	 *  Check integrity of the NVRAM env area. If not in order
 	 *  initialize it to empty.
 	 */
-	printf("in envinit\n");
+	PRINTD("in envinit\n");
 #ifdef NVRAM_IN_FLASH
 	nvram = (char *)(tgt_flashmap())->fl_map_base + NVRAM_OFFS;
-	printf("nvram=%08x\n", (unsigned int)nvram);
+	PRINTD("nvram=%08x\n", (unsigned int)nvram);
 	nvramsecbuf = malloc(NVRAM_SECSIZE);
 	memcpy(nvramsecbuf, nvram - (NVRAM_OFFS & (NVRAM_SECSIZE - 1)), NVRAM_SECSIZE);
 	nvram = nvramsecbuf  + (NVRAM_OFFS & (NVRAM_SECSIZE - 1));
@@ -1168,7 +1181,7 @@ void tgt_mapenv(int (*func) __P((char *, char *)))
 	nvram_get(nvram);
 	if (cksum(nvram, NVRAM_SIZE, 0) != 0) {
 #endif
-		printf("NVRAM is invalid!\n");
+		PRINTD("NVRAM is invalid!\n");
 		nvram_invalid = 1;
 	} else {
 #ifdef NVRAM_IN_FLASH
@@ -1194,7 +1207,7 @@ void tgt_mapenv(int (*func) __P((char *, char *)))
 #endif
 	}
 
-	printf("NVRAM@%x\n", (u_int32_t) nvram);
+	PRINTD("NVRAM@%x\n", (u_int32_t) nvram);
 #ifdef NVRAM_IN_FLASH
 	if (!nvram_invalid)
 		bcopy(&nvram[ACTIVECOM_OFFS], &activecom, 1);
@@ -1210,7 +1223,7 @@ void tgt_mapenv(int (*func) __P((char *, char *)))
 	sprintf(env, "0x%02x", em_enable);
 	(*func) ("em_enable", env);	/*tangyt */
 
-	printf("activecom = %d.   em_enable = %d.\n", activecom, em_enable);
+	PRINTD("activecom = %d.   em_enable = %d.\n", activecom, em_enable);
 #endif
 	/*
 	 *  Ethernet address for Galileo ethernet is stored in the last
@@ -1221,6 +1234,10 @@ void tgt_mapenv(int (*func) __P((char *, char *)))
 	sprintf(env, "%02x:%02x:%02x:%02x:%02x:%02x", hwethadr[0], hwethadr[1],
 		hwethadr[2], hwethadr[3], hwethadr[4], hwethadr[5]);
 	(*func) ("ethaddr", env);
+	bcopy(&nvram[ETHER1_OFFS], hwethadr1, 6);
+	sprintf(env, "%02x:%02x:%02x:%02x:%02x:%02x", hwethadr1[0], hwethadr1[1],
+		hwethadr1[2], hwethadr1[3], hwethadr1[4], hwethadr1[5]);
+	(*func) ("ethaddr1", env);
 
 #ifdef no_thank_you
 	(*func) ("vxWorks", env);
@@ -1302,7 +1319,7 @@ int cmp_test_mem(char *dist, char *src, int size)
 		if (*dist != *src) {
 			count++;
 			if (j <= 10) {
-				printf("dist != num.addr is :0x%x\n\n", src);
+				PRINTD("dist != num.addr is :0x%x\n\n", src);
 
 			}
 			j++;
@@ -1311,10 +1328,10 @@ int cmp_test_mem(char *dist, char *src, int size)
 		src++;
 	}
 	if (count == 0) {
-		printf("dist == num.\n");
+		PRINTD("dist == num.\n");
 	} else {
 
-		printf("dist != num. count:%d\n", count);
+		PRINTD("dist != num. count:%d\n", count);
 	}
 	return 0;
 }
@@ -1424,7 +1441,7 @@ int check_bad_block_pt(void)
 	for (i = 0; i < 1024; i++) {
 		nandread_spare(NAND_TEMP_ADDR, i * 2048 * 64, 16);
 		if (NAND_TEMP_ADDR[0] != 0xff) {
-			printf("bad block addr: 0x%x,num: %d\n", i * 2048 * 64,
+			PRINTD("bad block addr: 0x%x,num: %d\n", i * 2048 * 64,
 			       i);
 		}
 	}
@@ -1476,7 +1493,7 @@ int tgt_setenv(char *name, char *value)
 		nvrambuf[2] = '\0';
 		nvrambuf[3] = '\0';
 		cksum((void *)nvrambuf, NVRAM_SIZE, 1);
-		printf("Warning! NVRAM checksum fail. Reset!\n");
+		PRINTD("Warning! NVRAM checksum fail. Reset!\n");
 		nvram_invalid = 0;
 	}
 
@@ -1491,7 +1508,16 @@ int tgt_setenv(char *name, char *value)
 		em_enable = strtoul(value, 0, 0);
 	} else
 #endif
-	if (strcmp("ethaddr", name) == 0) {
+        if (strcmp("ethaddr1", name) == 0) {
+               char *s = value;
+               int i;
+               int32_t v;
+               for(i = 0; i < 6; i++) {
+               gethex(&v, s, 2);
+               hwethadr1[i] = v;
+               s += 3;         /* Don't get to fancy here :-) */
+               }
+       }else if (strcmp("ethaddr", name) == 0) {
 		char *s = value;
 		int i;
 		int32_t v;
@@ -1551,6 +1577,7 @@ int tgt_setenv(char *name, char *value)
 	bcopy(&em_enable, &nvrambuf[MASTER_BRIDGE_OFFS], 1);
 #endif
 	bcopy(hwethadr, &nvramsecbuf[ETHER_OFFS], 6);
+	bcopy(hwethadr1, &nvramsecbuf[ETHER1_OFFS], 6);
 	return (1);
 }
 
@@ -1909,7 +1936,7 @@ void map_gpu_addr(void)
 		__raw__writeq(0x900000001fe10078 , 0xffffffffe0000000);
 		__raw__writeq(0x900000001fe100b8 , 0x00000001e00000f0);
 	} else {
-		tgt_printf ("Now this Memory size %lld MB is not support mapping GPU address.\n", memorysize_total);
+		TPRINTD ("Now this Memory size %lld MB is not support mapping GPU address.\n", memorysize_total);
 	}
 }
 

@@ -450,7 +450,11 @@ config_attach(parent, match, aux, print)
 	device_ref(dev);
 
 	if (parent == ROOT)
+#ifndef INIT_TIME
 		printf("%s (root)", dev->dv_xname);
+#else
+		;
+#endif
 	else {
 
 #ifdef INTERFACE_3A780E
@@ -468,10 +472,11 @@ if (strstr(dev->dv_xname, "wd") != NULL || strstr(dev->dv_xname, "cd") != NULL |
 			b_name[i] = NULL;
 		}
 #endif	
+#ifndef INIT_TIME
 	printf("%s at %s", dev->dv_xname, parent->dv_xname);
 		if (print)
 			(void) (*print)(aux, (char *)0);
-
+#endif
 #if NMOD_USB_OHCI
 		if(ohci_index)
              		  dl_ohci_kbd(); //deal with usb keyboard

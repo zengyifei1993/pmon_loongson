@@ -77,6 +77,14 @@
 #endif
 			interrupt-parent = <&icu>;
 			interrupts = <36>;
+			dvi{
+ 				compatible = "loongson,ls2k dvi";
+  				dvo_name = "DVI";
+			};    
+ 			vga{
+      			compatible = "loongson,ls2k vga";
+				dvo_name = "VGA";
+			};
 		};
 
 #ifndef NOGPU
@@ -88,7 +96,21 @@
 			interrupts = <37>;
 		};
 #endif
-
+#ifdef EDID
+		/*1024x768*/
+               edid_dvo0: edid@0{
+                       compatible = "loongson,ls-dts-edid";
+                          edid-buf = [ 00 FF FF FF FF FF FF 00 0E 15 A3 04 00 00 00 00
+                                       18 1E 01 03 95 1C 10 78 0A 28 B5 97 59 54 92 26 
+                                       1E 50 54 00 00 00 01 01 01 01 01 01 01 01 01 01 
+                                       01 01 01 01 01 01 64 19 00 40 41 00 26 30 18 88 
+                                       36 00 30 E4 10 00 00 19 00 00 00 00 00 00 00 00 
+                                       00 00 00 00 00 00 00 00 00 00 00 00 00 FE 00 4C 
+                                       47 20 44 69 73 70 6C 61 79 0A 20 20 00 00 00 FE 
+                                       00 4C 50 31 32 35 57 48 32 2D 53 50 54 32 00 83
+                                       ];
+               };
+#endif
 		ohci@0x40070000 {
 			compatible = "loongson,ls2k-ohci", "usb-ohci";
 			reg = <0x40070000 0x10000>;

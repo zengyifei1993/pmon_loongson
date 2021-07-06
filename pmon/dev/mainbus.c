@@ -78,7 +78,9 @@ mainbus_attach(parent, self, aux)
 	struct confargs nca;
 	int i;
 
+#ifndef INIT_TIME
 	printf("\n");
+#endif
 	sc->sc_bus.bh_dv = (struct device *)sc;
 	sc->sc_bus.bh_type = BUS_MAIN;
 	sc->sc_bus.bh_intr_establish = NULL;

@@ -864,7 +864,8 @@ dbginit (char *adr)
 #else
 	printf ("\n * PMON2000 Professional *");
 #endif
-	printf ("\nConfiguration [%s,%s", TARGETNAME,
+#ifndef INIT_TIME
+	printf ("Configuration [%s,%s", TARGETNAME,
 			BYTE_ORDER == BIG_ENDIAN ? "EB" : "EL");
 #ifdef INET
 	printf (",NET");
@@ -873,13 +874,13 @@ dbginit (char *adr)
 	printf (",SCSI");
 #endif
 #if NWD > 0
-	printf (",IDE");
+	printf (",IDE]\n");
 #endif
-	printf ("]\nVersion: %s.\n", vers);
 	printf ("Supported loaders [%s]\n", getExecString());
 	printf ("Supported filesystems [%s]\n", getFSString());
 	printf ("This software may be redistributed under the BSD copyright.\n");
-
+#endif
+	printf ("Version: %s.\n", vers);
 		
 	print_cpu_info();
 	print_mem_freq();
@@ -891,7 +892,6 @@ dbginit (char *adr)
 	tgt_smpstartup();
 #endif
 
-	printf ("\n");
 	loongson_smbios_init();	
 	md_clreg(NULL);
 	md_setpc(NULL, (int32_t) CLIENTPC);
@@ -1186,7 +1186,9 @@ void get_memorysize(unsigned long long raw_memsz) {
 	if(memorysize_high_n3 != 0)
 	    memorysize_total += ((memorysize_high_n3 + (256 << 20)) >> 20);
 #endif
+#ifndef INIT_TIME
 	tgt_printf("memorysize_high: 0x%llx\n", memorysize_high);
+#endif
 #ifdef MULTI_CHIP
 	tgt_printf("memorysize_high_n1: 0x%llx\n", memorysize_high_n1);
 	tgt_printf("memorysize_high_n2: 0x%llx\n", memorysize_high_n2);
@@ -1206,6 +1208,9 @@ void __attribute__((weak)) print_mem_freq(void)
 	int memfreq,clk,clk30,clk4, clk20, clk34, mem_vco;
 	unsigned short div_refc, div_loopc, div_out;
 
+#if defined(LOONGSON_2K)
+	unsigned short l2_div_out_ddr;
+#endif
  	clk = get_mem_clk();
 #if defined(LOONGSON_3BSINGLE) || defined (LOONGSON_3BSERVER)
 	 /*for 3c/3b1500 ddr control*/
@@ -1248,7 +1253,17 @@ void __attribute__((weak)) print_mem_freq(void)
 	}
         else
 		printf("/ Bus @ %d MHz\n", MEM_BASE_CLK_2G);
-	
+#elif defined(LOONGSON_2K)
+
+	div_refc = ((*(volatile unsigned int *)(0xbfe10490))>>26) & 0x3f;
+	div_loopc = (*(volatile unsigned int *)(0xbfe10494)) & 0x3ff;
+	div_out = ((*(volatile unsigned int *)(0xbfe10494))>>10) & 0x3f;
+	l2_div_out_ddr = *(volatile unsigned int *)(0xbfe10498) & 0x3f;
+
+               memfreq = (100*div_loopc)/(div_refc*div_out*l2_div_out_ddr);
+               printf("/ Bus @ %d MHz\n",memfreq);
+
+
 #else  /* for 3a ddr controller */
         if(clk != 0x1f)
 	{

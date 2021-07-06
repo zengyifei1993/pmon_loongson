@@ -14,6 +14,12 @@
 #include "target/ls1a.h"
 #endif
 
+#ifdef INIT_TIME
+#define PRINTD(...)	  
+#else
+#define PRINTD(...)		printf(__VA_ARGS__)
+#endif
+
 static int
 syn_match(parent, match, aux)
 	struct device *parent;
@@ -102,11 +108,11 @@ pcisyn_attach(parent, self, aux)
 	u32 linkmap;
 
 	 if (pci_mem_find(NULL, pa->pa_tag, 0x10, &membasep, &memsizep, NULL)) {
-		printf(" Can't find mem space\n");
+		PRINTD(" Can't find mem space\n");
 		return;
 	}
 
-	printf("membasep=0x%x\n",(int)membasep);
+	PRINTD("membasep=0x%x\n",(int)membasep);
 
 #if defined(LS7A) || defined(LOONGSON_2K)
 	synopGMAC_init_network_interface(sc->dv_xname, (int)(membasep|0x80000000));

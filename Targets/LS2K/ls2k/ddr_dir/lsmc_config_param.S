@@ -30,6 +30,7 @@ ddr2_config:
     bnez    t1, 1b
     nop
 
+#ifdef LS2K_STR
     /*If S3 mode: configure memory controller, make sure the memory reset is high*/
     ld      t1, 0x150(t8)
     dli	    a0, (0xff<<48)
@@ -54,6 +55,7 @@ ddr2_config:
     /*clear mem_ctrl_flag*/
     dli     a0, 0x900000001fe07050
     sw      zero, 0x0(a0) 
+#endif
 #if 0 
 //autoset param registers
 set_tMOD:		

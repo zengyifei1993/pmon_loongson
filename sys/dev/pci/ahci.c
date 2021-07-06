@@ -82,7 +82,11 @@
 #define WAIT_MS_DATAIO	10000
 #define WAIT_MS_FLUSH	5000
 #define WAIT_MS_LINKUP	200
+#ifdef INIT_TIME
+#define debug 
+#else
 #define debug printf
+#endif
 
 int ahci_host_init(struct ahci_probe_ent *probe_ent);
 static void *ahci_init_one(u32 regbase);
@@ -140,32 +144,32 @@ static void ahci_attach(struct device *parent, struct device *self, void *aux)
 	if((PCI_VENDOR(pa->pa_id) == PCI_VENDOR_2KSATA && PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_2KSATA))
 	{
 		if (pci_mem_find(NULL, pa->pa_tag, 0x10, &membasep, &memsizep, NULL)) {
-			printf(" Can't find mem space\n");
+			debug(" Can't find mem space\n");
 		return;
 		}
 	} else if (pci_mem_find(NULL, pa->pa_tag, 0x24, &membasep, &memsizep, NULL)) {
-		printf(" Can't find mem space\n");
+		debug(" Can't find mem space\n");
 		return;
 	}
-	printf("Found memory space: memt->bus_base=0x%x, baseaddr=0x%x"
+	debug("Found memory space: memt->bus_base=0x%x, baseaddr=0x%x"
 	       "size=0x%x\n", memt->bus_base, (u32) (membasep),
 	       (u32) (memsizep));
 
 #if 0 /* set 1.0 mode */
 	int temp = *(int *)((membasep + 0x12c) | memt->bus_base);
-	printf("0x12C =%x\n", temp);
+	debug("0x12C =%x\n", temp);
 	*(int *)((membasep + 0x12c) | memt->bus_base) = temp & 0xffffff00 | 0x11;
 
 	temp = *(int *)((membasep + 0x12c) | memt->bus_base);
-	printf("0x12C =%x\n", temp);
+	debug("0x12C =%x\n", temp);
 #endif
 
 	if (!(probe_ent = ahci_init_one((u32) (memt->bus_base | (u32) (membasep))))) {
-		printf("ahci_init_one failed.\n");
+		debug("ahci_init_one failed.\n");
 	}
 
 	linkmap = probe_ent->link_port_map;
-	printf("ahci: linkmap=%x\n", linkmap);
+	debug("ahci: linkmap=%x\n", linkmap);
 	for (i = 0; i < probe_ent->n_ports; i++) {
 		if (((linkmap >> i) & 0x01)) {
 			info.sata_reg_base =
@@ -196,14 +200,14 @@ static void lahci_attach(struct device *parent, struct device *self, void *aux)
 	*(volatile int *)LS1A_SATA_CLK_REG  = 0x38682650; //100MHZ
 #endif
 	regbase = (bus_space_handle_t) cf->ca_baseaddr;;
-	printf("%s:%d: regbase = %08x\n", __FUNCTION__, __LINE__, regbase);
+	debug("%s:%d: regbase = %08x\n", __FUNCTION__, __LINE__, regbase);
 	if (!(probe_ent = ahci_init_one(regbase))) {
-		printf("ahci_init_one failed.\n");
+		debug("ahci_init_one failed.\n");
 	}
 
 
 	linkmap = probe_ent->link_port_map;
-	printf("lahci: linkmap=%x\n", linkmap);
+	debug("lahci: linkmap=%x\n", linkmap);
 	for (i = 0; i < 2; i++) {
 		if (((linkmap >> i) & 0x01)) {
 			info.sata_reg_base = regbase + 0x100 + i * 0x80;
@@ -288,7 +292,7 @@ int ahci_reset(void  *base)
 	} while ((i > 0) && (tmp & HOST_RESET));
 
 	if (i == 0) {
-		printf("controller reset failed (0x%x)\n", tmp);
+		debug("controller reset failed (0x%x)\n", tmp);
 		return -1;
 	}
 
@@ -369,7 +373,7 @@ int ahci_host_init(struct ahci_probe_ent *probe_ent)
 		/* Bring up SATA link. */
 		ret = ahci_link_up(probe_ent, i);
 		if (ret) {
-			printf("SATA link %d timeout.\n", i);
+			debug("SATA link %d timeout.\n", i);
 			continue;
 		} else {
 			debug("SATA link ok.\n");
@@ -402,7 +406,7 @@ int ahci_host_init(struct ahci_probe_ent *probe_ent)
 			continue;
 		}
 
-		printf("Target spinup took %d ms.\n", j);
+		debug("Target spinup took %d ms.\n", j);
 		if (j == WAIT_MS_SPINUP)
 			debug("timeout.\n");
 		else
@@ -456,7 +460,7 @@ static void ahci_print_info(struct ahci_probe_ent *probe_ent)
 
 	scc_s = "SATA";
 
-	printf("AHCI %02x%02x.%02x%02x "
+	debug("AHCI %02x%02x.%02x%02x "
 	       "%u slots %u ports %s Gbps 0x%x impl %s mode\n",
 	       (vers >> 24) & 0xff,
 	       (vers >> 16) & 0xff,
@@ -464,7 +468,7 @@ static void ahci_print_info(struct ahci_probe_ent *probe_ent)
 	       vers & 0xff,
 	       ((cap >> 8) & 0x1f) + 1, (cap & 0x1f) + 1, speed_s, impl, scc_s);
 
-	printf("flags: "
+	debug("flags: "
 	       "%s%s%s%s%s%s"
 	       "%s%s%s%s%s%s%s\n",
 	       cap & (1 << 31) ? "64bit " : "",
@@ -500,7 +504,7 @@ static void *ahci_init_one(u32 regbase)
 	probe_ent->udma_mask = 0x7f;	/*Fixme,assume to support UDMA6 */
 
 	probe_ent->mmio_base = regbase;
-	printf("%s:%d: regbase = %08x\n", __FUNCTION__, __LINE__, regbase);
+	debug("%s:%d: regbase = %08x\n", __FUNCTION__, __LINE__, regbase);
 
 	/* initialize adapter */
 	rc = ahci_host_init(probe_ent);

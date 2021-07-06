@@ -70,20 +70,21 @@ struct pci_config_data {
 /*nvram define                                                       */
 /*********************************************************************/
 #ifndef FLASH_SECTOR_SIZE
-#define FLASH_SECTOR_SIZE 0x1000
+#define FLASH_SECTOR_SIZE (VRAM_SIZE * 1024)
 #endif
 
 #ifdef NVRAM_IN_FLASH
-#	define	NVRAM_SIZE		492    /*modified by tangyt*/
+#	define	NVRAM_SIZE		486    /*modified by tangyt*/
 #	define	NVRAM_SECSIZE		500
-#       define  ACTIVECOM_OFFS      492 /*added by tangyt*/
-#       define  MASTER_BRIDGE_OFFS      493 /*added by tangyt*/
+#       define  ACTIVECOM_OFFS      486 /*added by tangyt*/
+#       define  MASTER_BRIDGE_OFFS      487 /*added by tangyt*/
 #ifdef BOOT_FROM_NAND
 #       define NVRAM_OFFS             0x000ffc00/*number 4 block*/
 #else
 #	define	NVRAM_OFFS		(0x100000 - FLASH_SECTOR_SIZE)
 #endif
-#	define ETHER_OFFS		494 	/* Ethernet address base */
+#	define ETHER_OFFS		488 	/* Ethernet address base */
+#	define ETHER1_OFFS		494 	/* Ethernet address base */
 #else	/* Use clock ram, 256 bytes only */
 #	define NVRAM_SIZE		114
 #	define NVRAM_SECSIZE		NVRAM_SIZE	/* Helper */

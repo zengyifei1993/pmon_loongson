@@ -63,10 +63,14 @@ configure()
 {
 	(void)splhigh();	/* To be really sure.. */
         /*	calc_delayconst(); */
+#ifndef INIT_TIME
 	printf("in configure\n");
+#endif
 	if(config_rootfound("mainbus", "mainbus") == 0)
 		panic("no mainbus found");
 	/*(void)spl0();*/
+#ifndef INIT_TIME
 	printf("out configure\n");
+#endif
 	cold = 0;
 }

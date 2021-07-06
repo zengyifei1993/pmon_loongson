@@ -50,7 +50,7 @@ static int i2c_tx_byte(unsigned char data, unsigned char opt)
 	while (ee_inb(SR_REG) & SR_TIP) ;
 
 	if (ee_inb(SR_REG) & SR_NOACK) {
-		printf("Eeprom has no ack, Pls check the hardware!\n");
+		printf("Eeprom has no ack, Pls check the hardware!");
 		ls2k_i2c_stop();
 		return -1;
 	}
@@ -218,21 +218,15 @@ int mac_read(unsigned char data_addr, unsigned char *buf, int count)
 	i = ls2k_eeprom_read_seq(data_addr, buf, count);
 
 	if (!i) {
-		printf("get random MAC address: ");
-		generate_mac_val(buf);
-
-		for (i = 0; i < count; i++) 
-			printf("%02x%s", buf[i], (i == (count - 1))? "":":");
-		printf("\n");
-
-		return i;
+		printf("use macaddress in the dts!!!\n");
+		return 0;
 	}
 
 	if (!is_valid_ether_addr_linux(buf)){
-		printf("Mac is invalid, now get a random mac\n");
-		generate_mac_val(buf);
+		printf("Mac is invalid, use macaddress in the dts\n");
+		return 0;
 	}
-	return i;
+	return 1;
 }
 
 int mac_write(unsigned char data_addr, unsigned char *buf, int count)

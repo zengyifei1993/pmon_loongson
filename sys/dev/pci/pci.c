@@ -43,6 +43,12 @@
 #include <dev/pci/pcivar.h>
 #include <dev/pci/pcidevs.h>
 
+#ifdef INIT_TIME
+#define PRINTD(...)	  
+#else
+#define PRINTD(...)		printf(__VA_ARGS__)
+#endif
+
 int pcimatch __P((struct device *, void *, void *));
 void pciattach __P((struct device *, struct device *, void *));
 
@@ -119,7 +125,7 @@ pciattach(parent, self, aux)
 	int bus, device, maxndevs, function, nfunctions;
 
 	pci_attach_hook(parent, self, pba);
-	printf("\n");
+	PRINTD("\n");
 
 	iot = pba->pba_iot;
 	memt = pba->pba_memt;
@@ -235,13 +241,13 @@ pciprint(aux, pnp)
 	if (pnp) {
                 supported=1;
 		_pci_devinfo(pa->pa_id, pa->pa_class, &supported, devinfo);
-		printf("%s at %s", devinfo, pnp);
+		PRINTD("%s at %s", devinfo, pnp);
 	}
-	printf(" dev %d function %d", pa->pa_device, pa->pa_function);
+	PRINTD(" dev %d function %d", pa->pa_device, pa->pa_function);
 	if (!pnp) {
                 supported=0;
 		_pci_devinfo(pa->pa_id, pa->pa_class, &supported, devinfo);
-		printf(" %s", devinfo);
+		PRINTD(" %s", devinfo);
 	}
 
 	return (UNCONF);

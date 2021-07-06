@@ -46,16 +46,21 @@
 
 #include "target/cacheops.h"	//mtf
 
-#define TTYDEBUG
-#ifdef TTYDEBUG
-#define	TTYDBG(x) \
-	.rdata;98: .asciz x; .text; la a0, 98b; bal stringserial; nop
+//#define TTYDEBUG
+#ifdef INIT_TIME
+#define	TTYDBG(x) 
 #else
-#define TTYDBG(x)
+#define TTYDBG(x) \
+	.rdata;98: .asciz x; .text; la a0, 98b; bal stringserial; nop
 #endif
 #define HAVE_TARGET_GETCHAR
+
+#ifdef INIT_TIME
+#define	PRINTSTR(x) 
+#else
 #define	PRINTSTR(x) \
 	.rdata;98: .asciz x; .text; la a0, 98b; bal stringserial; nop
+#endif
 
 #define CONFIG_CACHE_64K_4WAY 1 
 
@@ -908,7 +913,7 @@ cp0_main:
 
     li      t1, 0x30c31cf9
     sw      t1, 0x454(t0)
-    li      t1, 0xf300040f
+    li      t1, 0xf30f040f
     sw      t1, 0x450(t0)
 
 #if 1
@@ -1484,6 +1489,7 @@ END(outstring)
 
 LEAF(hexserial)
 	move	a2, ra
+#ifndef INIT_TIME
 	move	a1, a0
 	li	a3, 7
 1:
@@ -1503,7 +1509,7 @@ LEAF(hexserial)
 
 	bnez	a3, 1b
 	addu	a3, -1
-
+#endif
 	j	a2
 	nop
 END(hexserial)

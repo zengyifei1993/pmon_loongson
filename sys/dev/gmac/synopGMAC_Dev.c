@@ -1230,19 +1230,19 @@ s32 synopGMAC_check_phy_init (synopGMACdevice * gmacdev)
 #else
 	data = synopGMACReadReg(gmacdev->MacBase,0xd8);
 	gmacdev->LinkState0 = data;
-	if((data & 8) == 0){
+	if((data & 8) == 0){
 		if(gmacdev->LinkState)
-			TR("No Link: %08x\n",data);
-		gmacdev->LinkState = 0;
-		gmacdev->DuplexMode = 0;
-		gmacdev->Speed = 0;
-		gmacdev->LoopBackMode = 0; 
-				
-	}
-	else{
-		//TR("Link UP: %08x\n",data);
-		if(gmacdev->LinkState!=data)
-		{
+			TR("No Link: %08x\n",data);
+		gmacdev->LinkState = 0;
+		gmacdev->DuplexMode = 0;
+		gmacdev->Speed = 0;
+		gmacdev->LoopBackMode = 0; 
+				
+	}
+	else{
+		//TR("Link UP: %08x\n",data);
+		if(gmacdev->LinkState!=data)
+		{
 			gmacdev->DuplexMode = (data & 1)  ? FULLDUPLEX: HALFDUPLEX ;
 			TR("Link is up in %s mode\n",(gmacdev->DuplexMode == FULLDUPLEX) ? "FULL DUPLEX": "HALF DUPLEX");
 

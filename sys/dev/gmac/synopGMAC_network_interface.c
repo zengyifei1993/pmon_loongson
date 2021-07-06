@@ -40,6 +40,12 @@
 #include "target/ls1a.h"
 #endif
 
+#ifdef INIT_TIME
+#define PRINTD(...)	  
+#else
+#define PRINTD(...)		printf(__VA_ARGS__)
+#endif
+
 //sw:	ioctl in linux 		to be fixed
 #define SIOCDEVPRIVATE	0x89f0
 #define IOCTL_READ_REGISTER  SIOCDEVPRIVATE+1
@@ -227,9 +233,9 @@ void dumpphyregg(synopGMACdevice *gmacdev)
 	u16 data;
 	for(i = 0; i <= 31; i++){
 		synopGMAC_read_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,i,&data);
-		printf("PHY REG 0x%x  value:%x", i, data);
+		PRINTD("PHY REG 0x%x  value:%x", i, data);
 	}
-	printf("\n");
+	PRINTD("\n");
 
 }
 void dumpdmaregg(synopGMACdevice *gmacdev)
@@ -238,9 +244,9 @@ void dumpdmaregg(synopGMACdevice *gmacdev)
 	u16 data;
 	for(i=0;i<=31;i++){
 		data=synopGMACReadReg(gmacdev->DmaBase,i<<2);
-		printf("DMA REG 0x%x  value:%x",i,data);
+		PRINTD("DMA REG 0x%x  value:%x",i,data);
 	}
-	printf("\n");
+	PRINTD("\n");
 
 }
 void dumpmacregg(synopGMACdevice *gmacdev)
@@ -249,9 +255,9 @@ void dumpmacregg(synopGMACdevice *gmacdev)
 	u16 data;
 	for(i=0;i<=54;i++){
 		data=synopGMACReadReg(gmacdev->MacBase,i<<2);
-		printf("MAC REG 0x%x  value:%x",i,data);
+		PRINTD("MAC REG 0x%x  value:%x",i,data);
 	}
-	printf("\n");
+	PRINTD("\n");
 
 }
 
@@ -303,7 +309,7 @@ static int rtl8211_config_init(synopGMACdevice *gmacdev)
 	data = data | 0x8000;
 	err = synopGMAC_write_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,0x00,data);
 	synopGMAC_read_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,0x14,&data);
-	printf("phy reg 0x14:0x%x============\n", data);	
+	PRINTD("phy reg 0x14:0x%x============\n", data);	
 
 	if (err < 0)
 		return err;
@@ -323,7 +329,7 @@ static int rtl8211_config_init(synopGMACdevice *gmacdev)
   #if SYNOP_PHY_FORCELINK
   //sw: set manual master/slave
 
-          printf("phy force link master\n");
+          PRINTD("phy force link master\n");
                   
   //sw: set-an slave      
           err = synopGMAC_read_phy_reg((u64 *)gmacdev->MacBase,gmacdev->PhyBase,0x9, &data);
@@ -393,7 +399,7 @@ static int bcm54xx_ack_interrupt(synopGMACdevice *gmacdev)
 	if (reg < 0)
 		return reg;
 
-	printf("===phy intr status: %04x\n",data);
+	PRINTD("===phy intr status: %04x\n",data);
 	
 	return 0;
 }
@@ -576,15 +582,15 @@ s32 synopGMAC_setup_tx_desc_queue(synopGMACdevice * gmacdev,u32 no_of_desc, u32 
 	for(i =0; i < gmacdev -> TxDescCount; i++){
 		synopGMAC_tx_desc_init_ring(gmacdev->TxDesc + i, i == gmacdev->TxDescCount-1);
 #if SYNOP_TOP_DEBUG
-		printf("\n%02d %08x \n",i,(unsigned int)(gmacdev->TxDesc + i));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i))->status);
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->length));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->buffer1));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->buffer2));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->data1));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->data2));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->dummy1));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->dummy2));
+		PRINTD("\n%02d %08x \n",i,(unsigned int)(gmacdev->TxDesc + i));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i))->status);
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->length));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->buffer1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->buffer2));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->data1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->data2));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->dummy1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->dummy2));
 #endif
 	}
 
@@ -897,13 +903,13 @@ void synop_handle_transmit_over(struct synopGMACNetworkAdapter * tp)
 	desc_index = synopGMAC_get_tx_qptr(gmacdev, &status, &dma_addr1, &length1, &data1, &dma_addr2, &length2, &data2);
 #if SYNOP_TX_DEBUG
 
-	printf("===handle transmit_over: %d\n",desc_index);
+	PRINTD("===handle transmit_over: %d\n",desc_index);
 #endif
 #endif
 	//desc_index = synopGMAC_get_tx_qptr(gmacdev, &status, &dma_addr, &length, &data1);
 		if(desc_index >= 0 && data1 != 0){
 #if SYNOP_TX_DEBUG
-			printf("Finished Transmit at Tx Descriptor %d for skb 0x%08x and buffer = %08x whose status is %08x \n", desc_index,data1,dma_addr1,status);
+			PRINTD("Finished Transmit at Tx Descriptor %d for skb 0x%08x and buffer = %08x whose status is %08x \n", desc_index,data1,dma_addr1,status);
 #endif
 			#ifdef	IPC_OFFLOAD
 			if(synopGMAC_is_tx_ipv4header_checksum_error(gmacdev, status)){
@@ -1013,7 +1019,7 @@ void synop_handle_received_data(struct synopGMACNetworkAdapter* tp)
 
 		if(desc_index >= 0 && data1 != 0){
 #if SYNOP_RX_DEBUG
-			printf("Received Data at Rx Descriptor %d for skb 0x%08x whose status is %08x\n",desc_index,dma_addr1,status);
+			PRINTD("Received Data at Rx Descriptor %d for skb 0x%08x whose status is %08x\n",desc_index,dma_addr1,status);
 #endif
 
 			if(synopGMAC_is_rx_desc_valid(status)||SYNOP_PHY_LOOPBACK){
@@ -1021,7 +1027,7 @@ void synop_handle_received_data(struct synopGMACNetworkAdapter* tp)
 
 				if(skb == 0)
 #if SYNOP_RX_DEBUG
-					printf("===error in getmbuf\n");
+					PRINTD("===error in getmbuf\n");
 #else						
 				;
 #endif
@@ -1037,7 +1043,7 @@ void synop_handle_received_data(struct synopGMACNetworkAdapter* tp)
 				bcopy((char *)data1, mtod(skb, char *), len); 
 
 #if SYNOP_RX_DEBUG
-				printf("==get pkg len: %d",len);
+				PRINTD("==get pkg len: %d",len);
 #endif
 
 				skb->m_pkthdr.rcvif = ifp;
@@ -1052,21 +1058,21 @@ void synop_handle_received_data(struct synopGMACNetworkAdapter* tp)
 					for (k=0;k<len;k++)
 					{
 						temp = (char)(*(char *)(data1 + k));
-						printf("%02x  ",temp);
+						PRINTD("%02x  ",temp);
 					}
-					printf("\n");
+					PRINTD("\n");
 				}
 
 				if(eh->ether_shost[1] == 0x55)
 				{
-					printf("\n\n=!!! notice !!!===\n");
-					printf("==!!! notice !!!===\n");
+					PRINTD("\n\n=!!! notice !!!===\n");
+					PRINTD("==!!! notice !!!===\n");
 					for(i = 0;i < len;i++)
 					{
 						ptr = (char *)eh;
-						printf(" %02x",*(ptr+i));
+						PRINTD(" %02x",*(ptr+i));
 					}
-					printf("\n\n\n\n\n\n\n\n\n");
+					PRINTD("\n\n\n\n\n\n\n\n\n");
 				}
 #endif
 
@@ -1231,7 +1237,7 @@ int synopGMAC_intr_handler(struct synopGMACNetworkAdapter * tp)
 		mac_addr[5] += atoi(getenv("synmac"));
 #endif
 		TR("%s::Fatal Bus Error Inetrrupt Seen\n",__FUNCTION__);
-		printf("====DMA error!!!\n");
+		PRINTD("====DMA error!!!\n");
 		
 		synopGMAC_disable_dma_tx(gmacdev);
                 synopGMAC_disable_dma_rx(gmacdev);
@@ -1264,7 +1270,7 @@ int synopGMAC_intr_handler(struct synopGMACNetworkAdapter * tp)
 	{
 #if SYNOP_RX_TEST
 		rx_test_count += 1;
-		printf("Rx: %d packets!\n",rx_test_count);
+		PRINTD("Rx: %d packets!\n",rx_test_count);
 #endif
 //		dumpreg(regbase);
 		synop_handle_received_data(adapter);
@@ -1310,11 +1316,11 @@ int synopGMAC_intr_handler(struct synopGMACNetworkAdapter * tp)
 #endif
 				status = synopGMAC_set_rx_qptr(gmacdev,dma_addr,RX_BUF_SIZE, (u32)skb,0,0,0);
 				//pci_sync_cache(0, (vm_offset_t)skb, len, SYNC_W);
-				//printf("==rx sync cache\n");
+				//PRINTD("==rx sync cache\n");
 				TR("%s::Set Rx Descriptor no %08x for skb %08x \n",__FUNCTION__,status,(u32)skb);
 				if(status < 0)
 				{	
-					printf("==%s:no free\n",__FUNCTION__);
+					PRINTD("==%s:no free\n",__FUNCTION__);
 					plat_free_memory((void *)skb);
 				}
 			}while(status >= 0);
@@ -1329,7 +1335,7 @@ int synopGMAC_intr_handler(struct synopGMACNetworkAdapter * tp)
 
 #if SYNOP_TX_TEST
 		tx_normal_test_count += 1;
-		printf("Tx: %d normal packets!\n",tx_normal_test_count);
+		PRINTD("Tx: %d normal packets!\n",tx_normal_test_count);
 #endif
 #if (SYNOP_TX_DEBUG||SYNOP_LOOPBACK_DEBUG)
 
@@ -1338,7 +1344,7 @@ int synopGMAC_intr_handler(struct synopGMACNetworkAdapter * tp)
 #endif
 #if SYNOP_TX_DEBUG
 
-		printf("Gmac_intr: dma_status = 0x%08x\n",dma_status_reg);
+		PRINTD("Gmac_intr: dma_status = 0x%08x\n",dma_status_reg);
 #endif
 		synop_handle_transmit_over(adapter);	//Do whatever you want after the transmission is over
 	}
@@ -1346,10 +1352,10 @@ int synopGMAC_intr_handler(struct synopGMACNetworkAdapter * tp)
         if(interrupt & synopGMACDmaTxAbnormal){
 #if SYNOP_TX_TEST
 		tx_abnormal_test_count += 1;
-		printf("Tx: %d abnormal packets!\n",tx_abnormal_test_count);
+		PRINTD("Tx: %d abnormal packets!\n",tx_abnormal_test_count);
 #endif
 #if	(!defined(LOONGSON_2G5536))&&(!defined(LOONGSON_2G1A)) && (!defined(LOONGSON_2F1A))
-		printf("%s::Abnormal Tx Interrupt Seen\n",__FUNCTION__);
+		PRINTD("%s::Abnormal Tx Interrupt Seen\n",__FUNCTION__);
 #endif
 //		dumpreg(regbase);
 #if 1
@@ -1364,10 +1370,10 @@ int synopGMAC_intr_handler(struct synopGMACNetworkAdapter * tp)
 	if(interrupt & synopGMACDmaTxStopped){
 #if SYNOP_TX_TEST
 		tx_stopped_test_count += 1;
-		printf("Tx: %d stopped packets!\n",tx_stopped_test_count);
+		PRINTD("Tx: %d stopped packets!\n",tx_stopped_test_count);
 #endif
 		TR("%s::Transmitter stopped sending the packets\n",__FUNCTION__);
-		printf("%s::Transmitter stopped sending the packets\n",__FUNCTION__);
+		PRINTD("%s::Transmitter stopped sending the packets\n",__FUNCTION__);
 		#if 1
 		if(GMAC_Power_down == 0){	// If Mac is not in powerdown
 			synopGMAC_disable_dma_tx(gmacdev);
@@ -1461,7 +1467,7 @@ unsigned long synopGMAC_linux_open(struct synopGMACNetworkAdapter *tp)
 //	dumpphyreg(synopGMACadapter->synopGMACdev);
 
 #if SYNOP_TOP_DEBUG
-	printf("check phy init status = 0x%x\n",status);
+	PRINTD("check phy init status = 0x%x\n",status);
 #endif
 
 
@@ -1552,7 +1558,7 @@ unsigned long synopGMAC_linux_open(struct synopGMACNetworkAdapter *tp)
 
 		status = synopGMAC_set_rx_qptr(gmacdev,dma_addr,RX_BUF_SIZE, (u32)skb,0,0,0);
 		//pci_sync_cache(0, (vm_offset_t)skb, len, SYNC_W);
-		//printf("==rx sync cache\n");
+		//PRINTD("==rx sync cache\n");
 		//status = 0;
 		
 		if(status < 0)
@@ -1731,7 +1737,7 @@ s32 synopGMAC_linux_xmit_frames(struct ifnet* ifp)
 	synopGMACdevice * gmacdev;
 #if SYNOP_TX_DEBUG
 	TR("%s called \n",__FUNCTION__);
-	printf("===xmit  yeh!\n");
+	PRINTD("===xmit  yeh!\n");
 #endif
 	
 	adapter = (struct synopGMACNetworkAdapter *) ifp->if_softc;
@@ -1742,7 +1748,7 @@ s32 synopGMAC_linux_xmit_frames(struct ifnet* ifp)
 	if(gmacdev == NULL)
 		return -1;
 #if SYNOP_TX_DEBUG
-	printf("xmit: TxBusy = %d\tTxNext = %d\n",gmacdev->TxBusy,gmacdev->TxNext);
+	PRINTD("xmit: TxBusy = %d\tTxNext = %d\n",gmacdev->TxBusy,gmacdev->TxNext);
 #endif
 	//we use the function getmbuf() alloc mem, free it by m_freem()
 	if(!gmacdev->LinkState){
@@ -1805,9 +1811,9 @@ s32 synopGMAC_linux_xmit_frames(struct ifnet* ifp)
 			for(i = 0;i < len;i++)
 			{
 				ptr = (u32)bf1;
-				printf(" %02x",*(unsigned char *)(ptr+i));
+				PRINTD(" %02x",*(unsigned char *)(ptr+i));
 			}
-			printf("\n");
+			PRINTD("\n");
 #endif
 
 			m_freem(skb);
@@ -1829,13 +1835,13 @@ s32 synopGMAC_linux_xmit_frames(struct ifnet* ifp)
 			//status = synopGMAC_set_tx_qptr(gmacdev, dma_addr, TX_BUF_SIZE, bf1,0,0,0,offload_needed);
 				
 			status = synopGMAC_set_tx_qptr(gmacdev, dma_addr, len, bf1,0,0,0,offload_needed,&index,dpr);
-//			printf("synopGMAC_set_tx_qptr: index = %d, dma_addr = %08x, 
+//			PRINTD("synopGMAC_set_tx_qptr: index = %d, dma_addr = %08x, 
 //					len = %02x, buf1 = %08x\n", index, dma_addr, len, bf1);
-//			printf("===%x: next txDesc belongs to DMA don't set it\n",gmacdev->TxNextDesc);
+//			PRINTD("===%x: next txDesc belongs to DMA don't set it\n",gmacdev->TxNextDesc);
 //			dumpdesc(gmacdev);	// by xqch to dump all desc
 //			dumpreg(regbase);	//by xqch to dumpall dma reg
 #if SYNOP_TX_DEBUG
-			printf("status = %d \n",status);
+			PRINTD("status = %d \n",status);
 #endif
 
 
@@ -1860,7 +1866,7 @@ s32 synopGMAC_linux_xmit_frames(struct ifnet* ifp)
 	{
 		u32 data;
 		data = synopGMACReadReg(gmacdev->DmaBase, 0x48);
-		printf("TX DMA DESC ADDR = 0x%x\n",data);
+		PRINTD("TX DMA DESC ADDR = 0x%x\n",data);
 	}
 #endif
 	synopGMAC_resume_dma_tx(gmacdev);
@@ -1970,15 +1976,15 @@ void set_phy_manu(synopGMACdevice * gmacdev)
 	int i;
 	i = 100;
 
-	printf("set phy manu\n");
+	PRINTD("set phy manu\n");
 	
 	status = synopGMAC_read_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,PHY_CONTROL_REG, &data);
 	data = data & ~0x1000 | 0x100;
 	
-	printf("===data %x\n",data);
+	PRINTD("===data %x\n",data);
 	status = synopGMAC_write_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,PHY_CONTROL_REG, &data);
 	if (status != 0)
-		printf("===write phy error\n");
+		PRINTD("===write phy error\n");
 	
 	while(i)
 		i--;
@@ -2033,21 +2039,21 @@ int init_phy(struct synopGMACdevice *gmacdev)
 	u16 data3;
 	synopGMAC_read_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,2,&data2);
 	synopGMAC_read_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,3,&data3);
-    //printf("============== phy device ID is: %x\n", data2);
-    //printf("============== phy vendor ID is: %x\n", data3);
+    //PRINTD("============== phy device ID is: %x\n", data2);
+    //PRINTD("============== phy vendor ID is: %x\n", data3);
 	if(data2 == 0x141 && ((data3 >> 10) == 0x3)){ //marvel ethernet phy
         if(((data3 >> 4) & 0x3f) == 0x0C){  //88E11
 	        /*set 88e1111 clock phase delay*/
 	        rtl88e1111_config_init(gmacdev);
         }else if(((data3 >> 4) & 0x3f) == 0x1D) { //88E15
-            //printf("==== Warning: gmac phy 88E151X not initialized!\n");
-            //printf("==== Warning: reset gmac phy 88E151X!\n");
+            //PRINTD("==== Warning: gmac phy 88E151X not initialized!\n");
+            //PRINTD("==== Warning: reset gmac phy 88E151X!\n");
 	        alaska88e151x_config_init(gmacdev);
         } else{
-            printf("==== Warning: unrecoganized marvel gmac phy!\n");
+            PRINTD("==== Warning: unrecoganized marvel gmac phy!\n");
         }
     } else{
-        printf("==== Warning: unrecoganized gmac phy!\n");
+        PRINTD("==== Warning: unrecoganized gmac phy!\n");
     };
 	return 0;
 #else
@@ -2169,27 +2175,27 @@ void dumppkghd(struct ether_header *eh,int tp)
 		int i;
 //sw: dbg
 		if(tp == 1)
-	       		printf("\n===Rx:  pkg dst:  ");
+	       		PRINTD("\n===Rx:  pkg dst:  ");
 		else
-	       		printf("\n===Tx:  pkg dst:  ");
+	       		PRINTD("\n===Tx:  pkg dst:  ");
 		
 		for(i = 0;i < 6;i++)
-	       		printf(" %02x",eh->ether_dhost[i]);
+	       		PRINTD(" %02x",eh->ether_dhost[i]);
 		
 		if(tp == 1)
-			printf("\n===Rx:  pkg sst:  ");
+			PRINTD("\n===Rx:  pkg sst:  ");
 		else
-			printf("\n===Tx:  pkg sst:  ");
+			PRINTD("\n===Tx:  pkg sst:  ");
 	
 		for(i = 0;i < 6;i++)
-	       		printf(" %02x",eh->ether_shost[i]);
+	       		PRINTD(" %02x",eh->ether_shost[i]);
 		
 		if(tp == 1)
-			printf("\n===Rx:  pkg type:  ");
+			PRINTD("\n===Rx:  pkg type:  ");
 		else
-			printf("\n===Tx:  pkg type:  ");
-		printf(" %12x",eh->ether_type);
-		printf("\n");
+			PRINTD("\n===Tx:  pkg type:  ");
+		PRINTD(" %12x",eh->ether_type);
+		PRINTD("\n");
 		
 //dbg
 }
@@ -2212,7 +2218,7 @@ s32 synopGMAC_dummy_reset(struct ifnet *ifp)
 
 s32 synopGMAC_dummy_ioctl(struct ifnet *ifp)
 {
-//	printf("==dummy ioctl\n");
+//	PRINTD("==dummy ioctl\n");
 	return 0;
 }
 //sw:	i just copy this function from rtl8169.c
@@ -2250,7 +2256,7 @@ static int gmac_ether_ioctl(struct ifnet *ifp, unsigned long cmd, caddr_t data)
 			ifp->if_flags |= IFF_UP;
 #ifdef __OpenBSD__
 			arp_ifinit(&(adapter->PInetdev->arpcom), ifa);
-			printf("==arp_ifinit done\n");
+			PRINTD("==arp_ifinit done\n");
 #else
 			arp_ifinit(ifp, ifa);
 #endif
@@ -2272,7 +2278,7 @@ static int gmac_ether_ioctl(struct ifnet *ifp, unsigned long cmd, caddr_t data)
 		 * such as IFF_PROMISC are handled.
 		 */
 
-		printf("===ioctl sifflags\n");
+		PRINTD("===ioctl sifflags\n");
 		if(ifp->if_flags & IFF_UP){
 			synopGMAC_linux_open(adapter);
 		}
@@ -2301,7 +2307,7 @@ static int gmac_ether_ioctl(struct ifnet *ifp, unsigned long cmd, caddr_t data)
                 break;
 */
 	default:
-		printf("===ioctl default\n");
+		PRINTD("===ioctl default\n");
 		dumpreg(regbase);
 		error = EINVAL;
 	}
@@ -2309,7 +2315,7 @@ static int gmac_ether_ioctl(struct ifnet *ifp, unsigned long cmd, caddr_t data)
 	splx(s);
 
 	if(error)
-		printf("===ioctl error: %d\n",error);
+		PRINTD("===ioctl error: %d\n",error);
 	return (error);
 }
 
@@ -2317,32 +2323,32 @@ void dumpdesc(synopGMACdevice	* gmacdev)
 {
 	int i;
 	
-	printf("\n===dump Tx desc");
+	PRINTD("\n===dump Tx desc");
 	for(i =0; i < gmacdev -> TxDescCount; i++){
-		printf("\n%02d %08x : ",i,(unsigned int)(gmacdev->TxDesc + i));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i))->status);
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->length));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->buffer1));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->buffer2));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->data1));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->data2));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->dummy1));
-		printf("%08x ",(unsigned int)((gmacdev->TxDesc + i)->dummy2));
+		PRINTD("\n%02d %08x : ",i,(unsigned int)(gmacdev->TxDesc + i));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i))->status);
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->length));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->buffer1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->buffer2));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->data1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->data2));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->dummy1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->TxDesc + i)->dummy2));
 	}
-	printf("\n===dump Rx desc");
+	PRINTD("\n===dump Rx desc");
 	for(i =0; i < gmacdev -> RxDescCount; i++){
-		printf("\n%02d %08x : ",i,(unsigned int)(gmacdev->RxDesc + i));
-		printf("%08x ",(unsigned int)((gmacdev->RxDesc + i))->status);
-		printf("%08x ",(unsigned int)((gmacdev->RxDesc + i)->length));
-		printf("%08x ",(unsigned int)((gmacdev->RxDesc + i)->buffer1));
-		printf("%08x ",(unsigned int)((gmacdev->RxDesc + i)->buffer2));
-		printf("%08x ",(unsigned int)((gmacdev->RxDesc + i)->data1));
-		printf("%08x ",(unsigned int)((gmacdev->RxDesc + i)->data2));
-		printf("%08x ",(unsigned int)((gmacdev->RxDesc + i)->dummy1));
-		printf("%08x ",(unsigned int)((gmacdev->RxDesc + i)->dummy2));
+		PRINTD("\n%02d %08x : ",i,(unsigned int)(gmacdev->RxDesc + i));
+		PRINTD("%08x ",(unsigned int)((gmacdev->RxDesc + i))->status);
+		PRINTD("%08x ",(unsigned int)((gmacdev->RxDesc + i)->length));
+		PRINTD("%08x ",(unsigned int)((gmacdev->RxDesc + i)->buffer1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->RxDesc + i)->buffer2));
+		PRINTD("%08x ",(unsigned int)((gmacdev->RxDesc + i)->data1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->RxDesc + i)->data2));
+		PRINTD("%08x ",(unsigned int)((gmacdev->RxDesc + i)->dummy1));
+		PRINTD("%08x ",(unsigned int)((gmacdev->RxDesc + i)->dummy2));
 	}
 
-	printf("\n\n");
+	PRINTD("\n\n");
 	
 }
 
@@ -2353,44 +2359,44 @@ void dumpreg(u64 gbase)
 	int k;
 	u32 data;
 	
-	printf("\n==== gmac:0 dumpreg\n");
+	PRINTD("\n==== gmac:0 dumpreg\n");
 	for (i = 0,k = 0; i < 0xbc; i = i+4,k++)
 	{
 		data = synopGMACReadReg(gbase, i );
-		printf("  reg:%2x value:%8x  ",i,data);
+		PRINTD("  reg:%2x value:%8x  ",i,data);
 		if(k%4 == 3)
-			printf("\n");
+			PRINTD("\n");
 	}
-	printf("\n");
+	PRINTD("\n");
 	for (i = 0xc0,k = 0; i < 0xdc; i = i+4,k++){	
 		data = synopGMACReadReg(gbase, i );
-		printf("  reg:%2x value:%8x  ",i,data);
+		PRINTD("  reg:%2x value:%8x  ",i,data);
 		if(k%4 == 3)
-			printf("\n");
+			PRINTD("\n");
 	}
-	printf("\n");
+	PRINTD("\n");
 
 	for (i = 0,k = 0; i < 0x5c; i = i+4,k++){
 		data = synopGMACReadReg(gbase+0x1000, i );
-		printf("  reg:%2x value:%8x  ",i,data);
+		PRINTD("  reg:%2x value:%8x  ",i,data);
 		if(k%4 == 3)
-			printf("\n");
+			PRINTD("\n");
 
 	}
-	printf("\n\n");
+	PRINTD("\n\n");
 }
 
 void dumpphyreg(gbase)
 {
 	u16 data;
 	int i;
-	printf("===dump mii phy regs of GMAC: 0\n");
+	PRINTD("===dump mii phy regs of GMAC: 0\n");
 	for(i = 0x0; i <= 0x1f; i++)
 	{
 		synopGMAC_read_phy_reg(gbase+0x1000,0x10,i, &data);
-		printf("  mii phy reg: %x    value: %x  \n",i,data);
+		PRINTD("  mii phy reg: %x    value: %x  \n",i,data);
 	}
-	printf("\n");
+	PRINTD("\n");
 }
 
 /*
@@ -2467,13 +2473,13 @@ int set_lpmode(synopGMACdevice * gmacdev)
 	int status;
 	int delay;
 	
-	printf("===reset phy...\n");
+	PRINTD("===reset phy...\n");
 
 	status = synopGMAC_read_phy_reg(gmacdev->MacBase,1,0,&data);
 //sw: if you set bit 13,it resets!!
 //	data = 0x6000;
 	data = 0x4040;
-	printf("===set phy loopback mode , reg0: %x\n",data);
+	PRINTD("===set phy loopback mode , reg0: %x\n",data);
 	
 	status = synopGMAC_write_phy_reg(gmacdev->MacBase,1,0,data);
 	if(status != 0)
@@ -2484,7 +2490,7 @@ int set_lpmode(synopGMACdevice * gmacdev)
 		delay--;
 	
 	status = synopGMAC_read_phy_reg(gmacdev->MacBase,1,0,&data);
-	printf("===phy loopback mode , reg0: %x\n",data);
+	PRINTD("===phy loopback mode , reg0: %x\n",data);
 	
 	return 1;
 	
@@ -2498,7 +2504,7 @@ void memory_test()
 	
 while(1){
 	skb = (u32)plat_alloc_memory(RX_BUF_SIZE);		//should skb aligned here?
-	printf("==malloc addr: %x   size:1536B \n",skb);
+	PRINTD("==malloc addr: %x   size:1536B \n",skb);
 	if(skb == NULL){
 			TR0("ERROR in skb buffer allocation\n");
 	}
@@ -2512,7 +2518,7 @@ while(1){
 		dma_addr |= 0x00000000;
 #endif
 
-	printf("==free addr: %x   size:1536B \n",skb);
+	PRINTD("==free addr: %x   size:1536B \n",skb);
 	plat_free_memory(skb);
 	}
 }
@@ -2550,7 +2556,7 @@ void reg_init(synopGMACdevice * gmacdev)
   	data |= 0x8; 
 	synopGMACWriteReg(gmacdev->MacBase, GmacConfig,data);
 
-	printf("====done! OK!\n");
+	PRINTD("====done! OK!\n");
 	dumpreg(regbase);
 	
 }
@@ -2617,7 +2623,7 @@ void setup_tx_desc(synopGMACdevice * gmacdev)
 }
 #endif
 
-#if	defined(LOONGSON_2G5536)||defined(LOONGSON_2G1A) || defined(LOONGSON_2F1A)
+#if	defined(LOONGSON_2G5536)||defined(LOONGSON_2G1A) || defined(LOONGSON_2F1A) || defined (USE_ENVMAC)
 void parseenv(int index, u8 * buf)
 {
 	int i;
@@ -2675,7 +2681,7 @@ void set_phyled(struct synopGMACNetworkAdapter *synopGMACadapter)
         synopGMAC_write_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,0x1c, 0x420);
         synopGMAC_write_phy_reg(gmacdev->MacBase,gmacdev->PhyBase,0x1f, 0x0);
 
-	printf("Set phy led end\n");
+	PRINTD("Set phy led end\n");
 }
 
 #if	defined(LOONGSON_2G5536)||defined(LOONGSON_2G1A) || defined(LOONGSON_2F1A)
@@ -2702,6 +2708,8 @@ s32  synopGMAC_init_network_interface(char* xname,u64 synopGMACMappedAddr)
 		parseenv(1, mac_addr0);
 #endif
 #elif defined(LOONGSON_2K) || defined(LS7A)
+synopGMACdevice * cmdgmacdev[2];
+static int maxgmac = 0;
 s32  synopGMAC_init_network_interface(char* xname, u64 synopGMACMappedAddr)
 {
 	struct ifnet* ifp;
@@ -2728,8 +2736,12 @@ s32  synopGMAC_init_network_interface(char* xname, u64 synopGMACMappedAddr)
 	else if(gmac_num == 1)
 		memcpy(mac_addr0,mac_read_spi_buf + 16,6);
 #else
+#if defined(USE_ENVMAC)
+	parseenv(i, mac_addr0);
+#else
 	i2c_init();//configure the i2c freq
 	mac_read(eeprom_addr, mac_addr0, 6);
+#endif
 #endif
 
 	memcpy(smbios_uuid_mac, mac_addr0, 6);
@@ -2779,6 +2791,7 @@ s32  synopGMAC_init_network_interface(char* xname, struct device *sc )
 			(u64) synopGMACMappedAddr + MACBASE,
 			(u64) synopGMACMappedAddr + DMABASE,	
 			DEFAULT_PHY_BASE, mac_addr0);
+	cmdgmacdev[maxgmac++] = synopGMACadapter->synopGMACdev;
 #if SYNOP_TOP_DEBUG
 	dumpphyreg(synopGMACadapter);
 #endif
@@ -2899,4 +2912,109 @@ void gmac_stop(void)
 		synopGMAC_rx_disable(gmacdev1);
 	}   
 }
+int  write_phy(int argc, char **argv)
+{
+	unsigned int cmd0=0,reg=0,data=0,syn_num=0;
+	int err;
+	if(argc < 4)
+		return 0;
+	sscanf(argv[1], "%d", &reg);
+	sscanf(argv[2], "%d", &data);
+	sscanf(argv[3], "%d", &syn_num);
+	printf("reg=%x,data=%x,num=%x\n",reg,data,syn_num);
+	if(syn_num > maxgmac)
+		return 0;
+	if (reg >= 256)
+	{
+		err = synopGMAC_write_phy_reg(cmdgmacdev[syn_num]->MacBase,cmdgmacdev[syn_num]->PhyBase,0xc,data);
+		if (err < 0)
+		{
+			printf("write_phy reg error!\n");
+			return err;
+		}
+		err = synopGMAC_write_phy_reg(cmdgmacdev[syn_num]->MacBase,cmdgmacdev[syn_num]->PhyBase,0xb,0x8000+reg);
+		if (err < 0)
+		{
+			printf("write_phy reg error!\n");
+			return err;
+		}
+		err = synopGMAC_write_phy_reg(cmdgmacdev[syn_num]->MacBase,cmdgmacdev[syn_num]->PhyBase,0xb,reg);
+		if (err < 0)
+		{
+			printf("write_phy reg error!\n");
+			return err;
+		}
+		err = synopGMAC_read_phy_reg(cmdgmacdev[syn_num]->MacBase,cmdgmacdev[syn_num]->PhyBase,0xd,&data);
+		if (err < 0)
+		{
+			printf("write_phy reg error!\n");
+			return err;
+		}
+		else
+			printf("write value=0x%x\n",data);
 
+	}
+	else
+	{
+		err = synopGMAC_write_phy_reg(cmdgmacdev[syn_num]->MacBase,cmdgmacdev[syn_num]->PhyBase,reg,data);
+		if (err < 0)
+		{
+			printf("write_phy %d reg error!\n",syn_num);
+			return err;
+		}
+	}
+	return 0;
+}
+void read_phy(int argc,char **argv)
+{
+	unsigned int i=0,syn_num=0,data=0;	
+	int err;
+	sscanf(argv[1], "%d", &syn_num);
+	if(syn_num > maxgmac)
+		return 0;
+	for(i = 0; i < 32; i++)
+	{
+		err = synopGMAC_read_phy_reg(cmdgmacdev[syn_num]->MacBase,cmdgmacdev[syn_num]->PhyBase,i,&data);
+		if (err < 0)
+		{
+			printf("read_phy reg error!\n");
+			return err;
+		}
+		else
+		{
+			printf("phy%x[0x%x] = 0x%x\n",syn_num,i,data);
+		}
+	}
+	for(i = 256; i <= 256 + 7; i++)
+	{
+		err = synopGMAC_write_phy_reg(cmdgmacdev[syn_num]->MacBase,cmdgmacdev[syn_num]->PhyBase,0xb,i);
+		if (err < 0)
+		{
+			printf("write_phy reg error!\n");
+			return err;
+		}
+		err = synopGMAC_read_phy_reg(cmdgmacdev[syn_num]->MacBase,cmdgmacdev[syn_num]->PhyBase,0xd,&data);
+		if (err < 0)
+		{
+			printf("read_phy reg error!\n");
+			return err;
+		}
+		else
+		{
+			printf("phy%x[0x%x] = 0x%x\n",syn_num,i,data);
+		}
+	}
+}
+static const Cmd Cmds[] = {
+	{"gmac"},
+	{"write_phy","",0,"write_phy reg data index(phy)",write_phy,0,99,CMD_REPEAT},
+	{"read_phy","",0,"read_phy index(phy)",read_phy,0,99,CMD_REPEAT},
+	{0, 0}
+};
+
+static void init_cmd __P((void)) __attribute__ ((constructor));
+
+static void init_cmd()
+{
+	cmdlist_expand(Cmds, 1);
+}

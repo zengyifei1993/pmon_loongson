@@ -6,7 +6,7 @@ option          VGAROM_IN_BIOS
 
 option		LOONGSON_2K
 option         	BOOT_PARAM
-option      	VRAM_SIZE=16
+option      	VRAM_SIZE=16 #flash page size(4K\32K\64K),more than 64K if counted as 64K
 #
 #  Define target endian
 #
@@ -122,6 +122,8 @@ select		mod_framebuffer
 select		mod_vesa
 option 		CONFIG_VIDEO_16BPP
 #option 	CONFIG_VIDEO_8BPP_INDEX
+option 		FB_XSIZE=1280
+option 		FB_YSIZE=1024
 
 #
 # Functional options.
@@ -143,6 +145,11 @@ option		USE_SUPERIO_UART
 #option		LINUX_PC
 #option		LONGMENG
 #option		RADEON7000
+#+++++	pmon bmp picture  +++++#
+#option		CONSOLE_FULL_SCREEN
+#option		CONFIG_VIDEO_LOGO
+#option		CONFIG_VIDEO_BMP_LOGO
+
 #option 	DEBUG_EMU_VGA
 option		AUTOLOAD
 #option		CONFIG_PCI0_LARGE_MEM	
@@ -277,3 +284,5 @@ select		inet
 select		nand
 select cmd_xyzmodem
 option HPET_RTC
+
+#option INIT_TIME

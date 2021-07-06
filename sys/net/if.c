@@ -183,7 +183,9 @@ void
 if_attach(ifp)
 	struct ifnet *ifp;
 {
+#ifndef INIT_TIME
 	printf("in if attach\n");
+#endif
 	if (if_index == 0) {
 		TAILQ_INIT(&ifnet);
 	}

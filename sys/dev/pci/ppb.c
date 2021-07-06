@@ -50,6 +50,12 @@
 #include <dev/pci/pcidevs.h>
 #include <dev/pci/ppbreg.h>
 
+#ifdef INIT_TIME
+#define PRINTD(...)	  
+#else
+#define PRINTD(...)		printf(__VA_ARGS__)
+#endif
+
 int	ppbmatch __P((struct device *, void *, void *));
 void	ppbattach __P((struct device *, struct device *, void *));
 
@@ -97,12 +103,12 @@ ppbattach(parent, self, aux)
 	struct pcibus_attach_args pba;
 	pcireg_t busdata;
 
-	printf("\n");
+	PRINTD("\n");
 
 	busdata = pci_conf_read(pc, pa->pa_tag, PPB_REG_BUSINFO);
 
 	if (PPB_BUSINFO_SECONDARY(busdata) == 0) {
-		printf("%s: not configured by system firmware\n",
+		PRINTD("%s: not configured by system firmware\n",
 		    self->dv_xname);
 		return;
 	}
@@ -130,8 +136,9 @@ ppbattach(parent, self, aux)
 	pba.pba_bus = PPB_BUSINFO_SECONDARY(busdata);
 	pba.pba_intrswiz = pa->pa_intrswiz;
 	pba.pba_intrtag = pa->pa_intrtag;
-
+#ifndef INIT_TIME
 	config_found(self, &pba, ppbprint);
+#endif
 }
 
 int
@@ -143,7 +150,7 @@ ppbprint(aux, pnp)
 
 	/* only PCIs can attach to PPBs; easy. */
 	if (pnp)
-		printf("pci at %s", pnp);
-	printf(" bus %d", pba->pba_bus);
+		PRINTD("pci at %s", pnp);
+	PRINTD(" bus %d", pba->pba_bus);
 	return (UNCONF);
 }

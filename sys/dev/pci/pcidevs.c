@@ -238,6 +238,7 @@ _pci_devinfo(pcireg_t id_reg, pcireg_t class_reg, int *supp, char *cp)
 		subclassp++;
 	}
 
+#ifndef INIT_TIME
 	if (vendor_namep == NULL)
 		cp += sprintf(cp, "vendor/product: 0x%04x/0x%04x",
 		    vendor, product);
@@ -263,5 +264,6 @@ _pci_devinfo(pcireg_t id_reg, pcireg_t class_reg, int *supp, char *cp)
 	    cp += sprintf(cp, ", revision: 0x%02x", revision);
 	}
 	cp+=sprintf(cp,")");
+#endif
 /*	strcpy (cp, ")");*/
 }

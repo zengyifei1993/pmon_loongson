@@ -33,6 +33,9 @@
 
 #include <target/bonito.h>
 
+#ifdef INIT_TIME
+#define SBD_DEBUG
+#endif
 #ifdef SBD_DEBUG
 #define SBD_DISPLAY(text, code)		/* No display function */
 #else

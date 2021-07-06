@@ -1237,7 +1237,7 @@ int usb_stor_get_info(struct usb_device *dev,struct us_data *ss,block_dev_desc_t
 				USB_DIR_IN | USB_TYPE_CLASS | 
 				USB_RECIP_INTERFACE,
 				0, 0, &maxlun, 1, USB_CNTL_TIMEOUT);
-		printf("maxlun=%d\n", maxlun);
+		USB_STOR_PRINTF("maxlun=%d\n", maxlun);
 	}
 
 	pccb->pdata = usb_stor_buf;
@@ -1280,8 +1280,7 @@ int usb_stor_get_info(struct usb_device *dev,struct us_data *ss,block_dev_desc_t
 		cap[0] = 2880;
 		cap[1] = 0x200;
 	}
-	//USB_STOR_PRINTF("Read Capacity returns: 0x%lx, 0x%lx\n",cap[0],cap[1]);
-	printf("Read Capacity returns: 0x%lx, 0x%lx\n",cap[0],cap[1]);
+	USB_STOR_PRINTF("Read Capacity returns: 0x%lx, 0x%lx\n",cap[0],cap[1]);
 #if 0
 	if(cap[0]>(0x200000 * 10)) /* greater than 10 GByte */
 		cap[0]>>=16;
@@ -1302,8 +1301,7 @@ int usb_stor_get_info(struct usb_device *dev,struct us_data *ss,block_dev_desc_t
 	cap[0] += 1;
 	capacity = &cap[0];
 	blksz = &cap[1];
-	//USB_STOR_PRINTF("Capacity = 0x%lx, blocksz = 0x%lx\n",*capacity,*blksz);
-	printf("Capacity = 0x%lx, blocksz = 0x%lx\n",*capacity,*blksz);
+	USB_STOR_PRINTF("Capacity = 0x%lx, blocksz = 0x%lx\n",*capacity,*blksz);
 	dev_desc->lba = *capacity;
 	dev_desc->blksz = *blksz;
 	dev_desc->type = perq;

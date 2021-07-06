@@ -250,7 +250,7 @@ lvl_done_sampling0:
 
 lvl_resp_set0:
 	lb	a0, 0x7(t2)
-	dli	t4, 0x1
+	dli	t4, 0xff
 	and 	a0, a0, t4
 	beqz	a0, resp_set0_done
 	nop
@@ -343,7 +343,7 @@ lvl_done_sampling1:
 
 lvl_resp_set1:
 	lb	a0, 0x7(t2)
-	dli	t4, 0x1
+	dli	t4, 0xff
 	and 	a0, a0, t4
 	bnez	a0, resp_set1_done
 	nop

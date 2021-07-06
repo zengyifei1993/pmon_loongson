@@ -5,6 +5,12 @@
 #include <machine/pio.h>
 #include <target/ls2k.h>
 
+#ifdef INIT_TIME
+#define PRINTD(...)	  
+#else
+#define PRINTD(...)	printf(__VA_ARGS__)
+#endif
+
 #if !defined(DC_FB0) && !defined(DC_DB1)
 #define DC_FB0 1	//mtf modify
 #endif
@@ -177,7 +183,7 @@ int caclulatefreq(float PCLK)
 		}
 	rodf = modf == 8 ? 3 : modf == 4 ? 2 : modf == 2 ? 1 : 0;
 	out = (mpd << 24) + (mldf << 16) + (rodf << 5) + (5 << 2) + 1;
-	printf("ODF=%d, LDF=%d, IDF=5, pstdiv=%d, prediv=1\n", rodf, mldf, mpd);
+	PRINTD("ODF=%d, LDF=%d, IDF=5, pstdiv=%d, prediv=1\n", rodf, mldf, mpd);
 	return out;
 }
 
@@ -259,7 +265,7 @@ int dc_init()
 	int print_data;
 	unsigned int val;
 	int mode = -1;
-	printf("enter dc_init...\n");
+	PRINTD("enter dc_init...\n");
 
 #if defined(CONFIG_VIDEO_32BPP)
 	MEM_SIZE = PIXEL_COUNT * 4;
@@ -280,7 +286,7 @@ int dc_init()
 
 	MEM_ADDR = (long)MEM_ptr & 0x0fffffff;
 	if (MEM_ptr == NULL) {
-		printf("frame buffer memory malloc failed!\n ");
+		PRINTD("frame buffer memory malloc failed!\n ");
 		exit(0);
 	}
 
@@ -288,7 +294,7 @@ int dc_init()
 		outl(ADDR_CURSOR + ii, 0x88f31f4f);
 
 	ADDR_CURSOR = (long)ADDR_CURSOR & 0x0fffffff;
-	printf("frame buffer addr: %x \n", MEM_ADDR);
+	PRINTD("frame buffer addr: %x \n", MEM_ADDR);
 	/* Improve the DC DMA's priority */
 //mtf	outb(LS2H_QOS_CFG6_REG + 6, 0x36);
 	/* Make DVO from panel1, it's the same with VGA*/
@@ -298,13 +304,13 @@ int dc_init()
 		if (vgamode[i].hr == FB_XSIZE && vgamode[i].vr == FB_YSIZE) {
 			mode = i;
 			//out = caclulatefreq(vgamode[i].pclk);
-			//printf("out=%x\n", out);
+			//PRINTD("out=%x\n", out);
 			cal_freq(vgamode[i].pclk*1000, &pll_cfg);
 		}//if
 	}
 
 	if (mode < 0) {
-		printf("\n\n\nunsupported framebuffer resolution\n\n\n");
+		PRINTD("\n\n\nunsupported framebuffer resolution\n\n\n");
 		return MEM_ptr;
 	}
 
@@ -312,7 +318,7 @@ int dc_init()
 
 	val &= 0xffff0000;
 	val |= 0x80000000;
-	printf("val %x\n", val);
+	PRINTD("val %x\n", val);
 
 	config_pll(LS2K_PIX0_PLL, &pll_cfg);
 	config_pll(LS2K_PIX1_PLL, &pll_cfg);
@@ -320,7 +326,7 @@ int dc_init()
 	config_fb(val + DC1_BASE_ADDR_OFF, mode);	//for dvo_1 1250
 	config_cursor(val);
 
-	printf("display controller reg config complete!\n");
+	PRINTD("display controller reg config complete!\n");
 
 	return MEM_ptr;
 }
@@ -340,7 +346,7 @@ static int cmd_dc_freq(int argc, char **argv)
 	else
 		sysclk = 33333;
 	out = caclulatefreq(pclk);
-	printf("out=%x\n", out);
+	PRINTD("out=%x\n", out);
 	/* change to refclk */
 #ifdef DC_FB0
 	outl(LS2H_PIXCLK0_CTRL1_REG, 1);

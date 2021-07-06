@@ -103,8 +103,13 @@ bool is_pcie_vga_card();
 #define MAX(a,b)	((a) > (b) ? (a) : (b))
 #endif
 
+#ifdef INIT_TIME
+#define PRINTF 
+#define VPRINTF 
+#else
 #define PRINTF printf
 #define VPRINTF vprintf
+#endif
 
 #ifndef PCIVERBOSE
 #define _PCIVERBOSE 0
@@ -296,7 +301,7 @@ static void pcie_set_branch_min_mps(struct pci_device *dev, int mps)
 
 		rc = pcie_set_mps(pcidev, mps);
 		if (rc)
-			printf("Failed attempting to set the MPS\n");
+			PRINTF("Failed attempting to set the MPS\n");
 	}
 }
 static int pcie_get_tree_min_mps(struct pci_device *dev)
@@ -306,15 +311,15 @@ static int pcie_get_tree_min_mps(struct pci_device *dev)
 	int value = 0;
 
 	for (pd = dev->bridge.child; pd != NULL; pd = pd->next) {
-		//printf("line %d  bus %d dev %d\n",__LINE__, pd->pa.pa_bus, pd->pa.pa_device);
+		//PRINTF("line %d  bus %d dev %d\n",__LINE__, pd->pa.pa_bus, pd->pa.pa_device);
 		if (PCI_ISCLASS(pd->pa.pa_class, PCI_CLASS_BRIDGE, PCI_SUBCLASS_BRIDGE_PCI)) {
 			ret = pcie_get_tree_min_mps(pd);
-			//printf("line %d  bus %d dev %d ret %d value %d\n",__LINE__, pd->pa.pa_bus, pd->pa.pa_device,ret, value);
+			//PRINTF("line %d  bus %d dev %d ret %d value %d\n",__LINE__, pd->pa.pa_bus, pd->pa.pa_device,ret, value);
 			if (ret && ((ret < value) || (value == 0)))
 				value = ret;
 		} else {
 			value = pcie_get_branch_min_mps(pd);
-			//printf("line %d  bus %d dev %d value %d\n",__LINE__,pd->pa.pa_bus , pd->pa.pa_device, value);
+			//PRINTF("line %d  bus %d dev %d value %d\n",__LINE__,pd->pa.pa_bus , pd->pa.pa_device, value);
 		}
 	}
 	return value;
@@ -326,12 +331,12 @@ static int pcie_set_tree_min_mps(struct pci_device *dev, int mps)
 	int ret;
 
 	for (pd = dev->bridge.child; pd != NULL; pd = pd->next) {
-		//printf("line %d  bus %d dev %d\n",__LINE__, pd->pa.pa_bus, pd->pa.pa_device);
+		//PRINTF("line %d  bus %d dev %d\n",__LINE__, pd->pa.pa_bus, pd->pa.pa_device);
 		if (PCI_ISCLASS(pd->pa.pa_class, PCI_CLASS_BRIDGE, PCI_SUBCLASS_BRIDGE_PCI)) {
 			pcie_set_tree_min_mps(pd, mps);
 		} else {
 			pcie_set_branch_min_mps(pd, mps);
-			//printf("line %d  bus %d dev %d mps %d\n",__LINE__,pd->pa.pa_bus , pd->pa.pa_device, mps);
+			//PRINTF("line %d  bus %d dev %d mps %d\n",__LINE__,pd->pa.pa_bus , pd->pa.pa_device, mps);
 		}
 	}
 }
@@ -351,7 +356,7 @@ static void pcie_write_mps(struct pci_device *dev)
 		return;
 
 	for (pcidev = dev; pcidev->pa.pa_bus > 0; pcidev = pcidev->parent) {
-		//printf("--> bus %d dev %d\n",pcidev->pa.pa_bus, pcidev->pa.pa_device);
+		//PRINTF("--> bus %d dev %d\n",pcidev->pa.pa_bus, pcidev->pa.pa_device);
 	}
 	/* pcidev is the last level device */
 	/* find the minimal max payload size */
@@ -372,12 +377,12 @@ static void pcie_write_mrrs(struct pci_device *dev)
 
 	/* set device mmrs to pcie slot max mrrs support capability */
 	for (pcidev = dev; pcidev->pa.pa_bus > 0; pcidev = pcidev->parent) {
-		//printf("--> bus %d dev %d\n",pcidev->pa.pa_bus, pcidev->pa.pa_device);
+		//PRINTF("--> bus %d dev %d\n",pcidev->pa.pa_bus, pcidev->pa.pa_device);
 	}
 	mrrs = pcie_get_readrq(pcidev);
 	rc = pcie_set_readrq(dev, mrrs);
 	if (rc)
-		printf("Failed attempting to set the MPS\n");
+		PRINTF("Failed attempting to set the MPS\n");
 
 	mrrs = 128;
 	for (pcidev = dev->parent; pcidev != NULL; pcidev = pcidev->parent) {
@@ -386,7 +391,7 @@ static void pcie_write_mrrs(struct pci_device *dev)
 			continue;
 		rc = pcie_set_readrq(pcidev, mrrs);
 		if (rc)
-			printf("Failed attempting to set the MPS\n");
+			PRINTF("Failed attempting to set the MPS\n");
 	}
 }
 
@@ -625,7 +630,7 @@ _pci_query_dev_func (struct pci_device *dev, pcitag_t tag, int initialise)
 
         /* Update sub bus number */
         for(pcidev = dev; pcidev != NULL; pcidev = pcidev->parent) {
-            //printf("pcidev = 0x%x\n", pcidev);
+            //PRINTF("pcidev = 0x%x\n", pcidev);
             pcidev->bridge.subbus_num = pd->bridge.secbus_num;
             tmp = _pci_conf_read(pcidev->pa.pa_tag, PCI_PRIBUS_1);
             tmp &= 0xff00ffff;
@@ -932,13 +937,13 @@ _pci_query_dev (struct pci_device *dev, int bus, int device, int initialise)
 	if((bus == 2) && (device ==0))
 	{
 		if(PCI_VENDOR(id) != 0x1002 && (PCI_PRODUCT(id) != 0x9615))
-		  printf("pcie-slot device: vendor:%x product:%x\n",PCI_VENDOR(id),PCI_PRODUCT(id));
+		  PRINTF("pcie-slot device: vendor:%x product:%x\n",PCI_VENDOR(id),PCI_PRODUCT(id));
 	}
 
 #if defined(USE_BMC)
         if (PCI_VENDOR(id) == 0x1a03 && PCI_PRODUCT(id) == 0x2000)
         {
-                printf("AST2050's VGA discover !!!!!!!!!!!!!!\n");
+                PRINTF("AST2050's VGA discover !!!!!!!!!!!!!!\n");
         }
 #endif
 #endif
@@ -1132,21 +1137,21 @@ _pci_setup_windows (struct pci_device *dev)
 #else
         if ((PCI_VENDOR(pd->pa.pa_id) == 0x1002) && (PCI_PRODUCT(pd->pa.pa_id) == 0x9615))
         {
-			printf("vga_dev =:%x\n",vga_dev);
+			PRINTF("vga_dev =:%x\n",vga_dev);
             vga_dev = pd;
             pd->disable=0;
         }else{
 		if (PCI_VENDOR(pd->pa.pa_id) == 0x1a03);
 		else if (PCI_VENDOR(pd->pa.pa_id) == 0x0014);//ls7a vga
 		else {
-			printf("pcie_dev :%x vga_dev ==:%x\n",pcie_dev,vga_dev);
+			PRINTF("pcie_dev :%x vga_dev ==:%x\n",pcie_dev,vga_dev);
 	        	pcie_dev = pd;
             		pd->disable=0;
 			vga_dev = NULL;
 		}
         }
 #endif
-		printf("pcie_dev :%x vga_dev ==:%x\n",pcie_dev,vga_dev);
+		PRINTF("pcie_dev :%x vga_dev ==:%x\n",pcie_dev,vga_dev);
 	}
 #endif
 #if 0
@@ -1245,10 +1250,10 @@ bool is_pcie_vga_card()
 	tag = _pci_make_tag(1, 0, 0);
 	value = _pci_conf_read(tag, 0x08);
 
-	// printf("((((((((((((((( Class_Code=0X%02X))))))))))))))))\n", PCI_CLASS_CODE(value));
+	// PRINTF("((((((((((((((( Class_Code=0X%02X))))))))))))))))\n", PCI_CLASS_CODE(value));
 	if( (PCI_CLASS_CODE(value) == 0x03) ) // Display Controllers
 		ret = 1;
-	printf("Is independent_vga_card=%s\n", ( (ret)? "Yes" : "No") );
+	PRINTF("Is independent_vga_card=%s\n", ( (ret)? "Yes" : "No") );
 
 	return ret;
 }
@@ -1374,13 +1379,10 @@ _pci_businit (int init)
 {
 	char *v;
 
-	tgt_putchar('P');
 	v = getenv("pciverbose");
-    tgt_putchar('1');
 	if (v) {
 	    _pciverbose = atol(v);
 	}
-    tgt_putchar('2');
 
 	/* intialise the PCI bridge */
 	if (/*init*/ 1) {
@@ -1397,7 +1399,7 @@ _pci_businit (int init)
 		struct pci_device *pb;
 
                 if (_pciverbose) {
-			printf("setting up %d bus\n", init);
+			PRINTF("setting up %d bus\n", init);
 		}
 		for(i = 0, pb = _pci_head; i < pci_roots; i++, pb = pb->next) {
 			pb->bridge.pribus_num = i?++_pci_nbus:_pci_nbus;
@@ -1421,11 +1423,11 @@ _pci_scan_dev(struct pci_device *dev, int bus, int device, int initialise)
 if(getenv("pcistep"))
 {
             if(!bus){char str[100];
-                printf("pciscan device %d[Y/n]?",device);
+                PRINTF("pciscan device %d[Y/n]?",device);
                 gets(str);
                 if(str[0]=='n'){
 				int i;
-				printf("skip\n");
+				PRINTF("skip\n");
 				for(i=0;i<8;i++)
 				_pci_conf_write(_pci_make_tag(0,device,i),4,0);
 				continue;
@@ -1444,7 +1446,7 @@ _pci_scan_dev(struct pci_device *dev, int bus, int device, int initialise)
 		if(!bus && (device==6) && getenv("vga1"))
 			{
 				int i;
-				printf("skip dev 6\n");
+				PRINTF("skip dev 6\n");
 				for(i=0;i<8;i++)
 				_pci_conf_write(_pci_make_tag(bus,device,i),4,0);
 				continue;

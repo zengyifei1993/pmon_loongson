@@ -35,6 +35,11 @@
 #include <unistd.h>
 #include <stdio.h>
 
+#ifdef INIT_TIME
+#define PRINTD(...)	  
+#else
+#define PRINTD(...)		printf(__VA_ARGS__)
+#endif
 
 extern char     end[];
 char           *allocp1 = end;
@@ -49,19 +54,19 @@ chg_heaptop (name, value)
 	if (atob (&top, value, 16)) {
 #ifdef HEAP_ALLOC_UPWORD
 		if(top < (u_int32_t)allocp1) {
-			printf ("%x: heap is already above this point\n", top);
+			PRINTD ("%x: heap is already above this point\n", top);
 			return 0;
 		}
 #else
 		if(top <heaptop) {
-			printf ("%x:  memory between %x-%x  is already been allocated,heap is already above this point\n", top,allocp1,heaptop);
+			PRINTD ("%x:  memory between %x-%x  is already been allocated,heap is already above this point\n", top,allocp1,heaptop);
 			return 0;
 		}
 #endif
 		heaptop = (char *) top;
 		return 1;
 	}
-	printf ("%s: invalid address\n", value);
+	PRINTD ("%s: invalid address\n", value);
 	return 0;
 }
 

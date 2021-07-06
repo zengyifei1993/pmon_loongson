@@ -36,6 +36,7 @@ static int check_mac_ok(void)
 	const void *nodep;	/* property node pointer */
 	int  nodeoffset;	/* node offset from libfdt */
 	int  len, id, i;		/* length of the property */
+	int  j = 1; 
 	u8 mac_addr[6] = {0x00, 0x55, 0x7B, 0xB5, 0x7D, 0xF7};	//default mac address
 	char ethernet_name[2][25]={"/soc/ethernet@0x40040000", "/soc/ethernet@0x40050000"};
 
@@ -52,8 +53,10 @@ static int check_mac_ok(void)
 #ifdef USE_ENVMAC
 		if (USE_ENVMAC)
 		{
+			if(id == 0)
 			tgt_ethaddr(mac_addr);
-			mac_addr[0] += id;
+			else 
+			tgt_ethaddr1(mac_addr);
 		}
 		else
 		{
@@ -61,13 +64,17 @@ static int check_mac_ok(void)
 		}
 #else
 		i2c_init();//configure the i2c freq
-		mac_read(id * 6, mac_addr, 6);
+		j = mac_read(id * 6, mac_addr, 6);
 #endif
-		for(i = 0;i < 6;i++) {
-			if(mac_addr[i] != (*((char *)nodep + i) & 0xff)) {
-				printf("mac_eeprom[%d]=0x%x; mac_dtb[%d]=0x%x; reset mac addr in dtb\n", \
-						i, mac_addr[i], i, *((char *)nodep + i) & 0xff);
-				return 0;
+		if(!j){
+			return 1;
+		}else{
+			for(i = 0;i < 6;i++) {
+				if(mac_addr[i] != (*((char *)nodep + i) & 0xff)) {
+					printf("mac_eeprom[%d]=0x%x; mac_dtb[%d]=0x%x; reset mac addr in dtb\n", \
+							i, mac_addr[i], i, *((char *)nodep + i) & 0xff);
+					return 0;
+				}
 			}
 		}
 	}
@@ -240,8 +247,10 @@ static int update_mac(void * ssp, int id)
 #ifdef USE_ENVMAC
 	if (USE_ENVMAC)
 	{
+		if(id == 0)
 		tgt_ethaddr(mac_addr);
-		mac_addr[0] += id;
+		else 
+		tgt_ethaddr1(mac_addr);
 	}
 	else
 	{
@@ -319,6 +328,8 @@ void verify_dtb(void)
 		update_mem_args(buff + 4);
 		dtb_cksum(buff, DTB_SIZE - 4, 1);
 		memcpy(dtbbuf, buff, DTB_SIZE);
+		char *dtbram = (char *)(tgt_flashmap()->fl_map_base) + DTB_OFFS;
+		tgt_flashprogram(dtbram, DTB_SIZE, dtbbuf, 0);
 	}
 }
 

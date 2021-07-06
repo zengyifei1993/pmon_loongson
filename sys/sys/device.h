@@ -177,7 +177,11 @@ struct cfdriver {
  */
 typedef int (*cfprint_t) __P((void *, const char *));
 #define	QUIET	0		/* print nothing */
+#ifdef INIT_TIME
+#define	UNCONF	0		/* print " not configured\n" */
+#else
 #define	UNCONF	1		/* print " not configured\n" */
+#endif
 #define	UNSUPP	2		/* print " not supported\n" */
 
 /*

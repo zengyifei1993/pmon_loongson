@@ -63,6 +63,12 @@
 #include <vm/vm.h>
 #endif
 
+#ifdef INIT_TIME
+#define PRINTD(...)	  
+#else
+#define PRINTD(...)		printf(__VA_ARGS__)
+#endif
+
 int sysloglevel;
 int boothowto;
 
@@ -161,16 +167,16 @@ extern vm_map_t mb_map, kernel_map;
 		}
 		
 		ifinit();
-		printf("ifinit done.\n");
+		PRINTD("ifinit done.\n");
 		domaininit();
-		printf("domaininit done.\n");
+		PRINTD("domaininit done.\n");
 		splx(s);
 	}
 
 	/* 
 	 * Initialise process table, we become first "process" 
 	 */
-	printf("init_proc....\n");
+	PRINTD("init_proc....\n");
 	init_proc ();
 
 	/* enable realtime clock interrupts */
@@ -210,7 +216,7 @@ extern vm_map_t mb_map, kernel_map;
 			*cp = '\0';
 
 			s = splhigh();
-			printf("network configure '%s:%s'\n", ifn, p);
+			PRINTD("network configure '%s:%s'\n", ifn, p);
 			splx(s);
 			ifconfig (ifn, p);
 		}
