@@ -6,7 +6,9 @@ option          VGAROM_IN_BIOS
 
 option		LOONGSON_2K
 option         	BOOT_PARAM
-option      	VRAM_SIZE=16 #flash page size(4K\32K\64K),more than 64K if counted as 64K
+option      	VRAM_SIZE=4 #flash page size(4K\32K\64K),more than 64K if counted as 64K
+#option		FLASH_SECTOR_SIZE = 0x1000
+
 #
 #  Define target endian
 #
